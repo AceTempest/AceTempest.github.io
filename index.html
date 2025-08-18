@@ -2,13 +2,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RuneScape 3 - Editable Archaeology Artefact Tracker</title>
+    <title>RuneScape 3 - Shared Archaeology Artefact Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chosen Palette: Desert Sunrise -->
-    <!-- Application Structure Plan: The application is structured as a single-page interactive dashboard. This design was chosen for its usability and efficiency. The main components are a filter and search section at the top for immediate user control, a detailed and sortable table for in-depth information, and a section with summary charts for a quick visual overview of the data. This structure allows users to seamlessly switch between broad exploration (charts) and specific investigation (table and filters) without navigating away from the main view, providing a more fluid and intuitive user experience than a linear document or a multi-page site. -->
-    <!-- Visualization & Content Choices: The core data is presented in an interactive HTML table, chosen for its ability to display dense, sortable information clearly. For high-level insights, Chart.js is used to create a bar chart (Artefacts by Dig Site) and a pie chart (Artefacts by Collection). The bar chart is ideal for comparing the quantity of artefacts across different locations, while the pie chart effectively shows the proportional distribution of artefacts among various collections. User interaction is centered around dropdown filters and a live search bar, allowing for dynamic data slicing. This combination of interactive table and summary charts provides both granular detail and a macroscopic view of the Archaeology skill's content, all within a single, cohesive interface. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             background-color: #FDF6E3; /* A warm, parchment-like background */
@@ -30,6 +26,20 @@
         .selected-row {
             background-color: #FEF3C7; /* A light amber for selected rows */
         }
+        /* Simple loading spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #b45309;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="font-sans text-gray-800">
@@ -37,14 +47,14 @@
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-amber-900">RuneScape 3 Archaeology Tracker</h1>
-            <p class="text-lg text-amber-700 mt-2">Explore, filter, and track all Archaeology artefacts.</p>
+            <p class="text-lg text-amber-700 mt-2">Explore, filter, and track all Archaeology artefacts in real-time.</p>
         </header>
 
         <main>
             <!-- Player Request Section -->
             <section id="player-requests" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
                 <h2 class="text-xl font-bold text-amber-900 mb-2">Manage Artefact Requests</h2>
-                <p class="text-amber-700 mb-4">First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.</p>
+                <p id="request-prompt" class="text-amber-700 mb-4">First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.</p>
                 <div id="player-controls" class="flex justify-center items-center gap-4 flex-wrap">
                     <!-- Player controls will be dynamically inserted here -->
                 </div>
@@ -79,7 +89,7 @@
                             </tr>
                         </thead>
                         <tbody id="artefact-table-body">
-                            <!-- Artefact rows will be dynamically inserted here -->
+                           <tr><td colspan="4"><div class="loader"></div><p class="text-center">Loading Artefacts...</p></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -103,247 +113,74 @@
         </footer>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        // This object is provided by Firebase when you create a new web app.
+        // It's safe to expose this in your client-side code.
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7XlmkRWHkTIwTQQYzhtLDp0NBy_rTeKE",
+            authDomain: "tci-gim-artefact-requesting.firebaseapp.com",
+            projectId: "tci-gim-artefact-requesting",
+            storageBucket: "tci-gim-artefact-requesting.appspot.com",
+            messagingSenderId: "1004367201833",
+            appId: "1:1004367201833:web:39bb7f3762443da04c7e38"
+        };
+        // --- END OF FIREBASE CONFIGURATION ---
+
+        // --- GLOBAL VARIABLES ---
         const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
-
-        // --- EDIT THIS LIST ---
-        // To add, edit, or remove an artefact, modify the list below.
-        // The list is sorted by the Archaeology level required for the artefact.
-        // Format for each item: { name: "Artefact Name", collections: ["Collection 1", "Use 2"] },
-        // Make sure each line ends with a comma, except for the very last one.
-        const artefacts = [
-            { name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Centurion's seal", collections: ["Mystery: Breaking the Seal"] },
-            { name: "Primis Elementis standard", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Legionary gladius", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Legionary square shield", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Zaros effigy", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Zarosian training dummy", collections: ["Zarosian I", "Museum - Zarosian I", "Unlock Researcher: Katarina"] },
-            { name: "Hookah pipe", collections: ["Smoky Fings", "Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Opulent wine goblet", collections: ["Smoky Fings", "Zamorakian I", "Museum - Zamorakian I", "Unlock Researcher: Dorian"] },
-            { name: "Crest of Dagon", collections: ["Showy Fings", "Zamorakian I", "Museum - Zamorakian I", "Mystery: Eyes in their Stars"] },
-            { name: "'Disorder' painting", collections: ["Knowledge is Power", "Anarchic Abstraction", "Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Legatus Maximus figurine", collections: ["Showy Fings", "Zarosian I", "Museum - Zarosian I", "Magic Man"] },
-            { name: "'Solem in Umbra' painting", collections: ["Imperial Impressionism", "Zarosian I", "Museum - Zarosian I"] },
-            { name: "Imp mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Problem"] },
-            { name: "Lesser demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
-            { name: "Greater demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
-            { name: "Teleportation crystal", collections: ["Quest: Osseous Rex"] },
-            { name: "Order of Dis robes", collections: ["Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Ritual dagger", collections: ["Zamorakian I", "Museum - Zamorakian I", "Magic Man"] },
-            { name: "'Frying pan'", collections: ["Saradominist I", "Museum - Saradominist I", "Mystery: Fallen Angels"] },
-            { name: "Hallowed lantern", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Branding iron", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Manacles", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Ancient timepiece", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Mystery: Time Served"] },
-            { name: "Legatus pendant", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Toolbelt: Kharid-et access"] },
-            { name: "Ceremonial unicorn ornament", collections: ["Saradominist I", "Museum - Saradominist I", "Hat Hoarder", "Unlock Researcher: Eduardo"] },
-            { name: "Ceremonial unicorn saddle", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Dragonkin device", collections: ["Quest: Desperate Measures"] },
-            { name: "Dragonkin tablet", collections: ["Quest: Desperate Measures"] },
-            { name: "Tetracompass (unpowered)", collections: ["Utility: Find ancient casket"] },
-            { name: "Everlight harp", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Everlight trumpet", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Everlight violin", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Folded-arm figurine (female)", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Folded-arm figurine (male)", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "'Incite Fear' spell scroll", collections: ["Zarosian II", "Museum - Zarosian II", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Pontifex signet ring", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Toolbelt: Kharid-et access"] },
-            { name: "Apex cap", collections: ["Museum - Zarosian V", "Religious Iconography"] },
-            { name: "Curse tablet", collections: ["Museum - Zarosian V", "Imperial Sorcery"] },
-            { name: "Funerary urn of shadow", collections: ["Museum - Zarosian V", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Dominion discus", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion javelin", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion pelte shield", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Infula robes", collections: ["Museum - Zarosian V", "Religious Iconography"] },
-            { name: "Funerary urn of smoke", collections: ["Museum - Zarosian V", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Hand of the Ancients", collections: ["Museum - Zarosian V", "Imperial Sorcery"] },
-            { name: "Decorative amphora", collections: ["Museum - Zarosian VI", "Entertaining the Masses"] },
-            { name: "Funerary urn of ice", collections: ["Museum - Zarosian VI", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Loarnab rod", collections: ["Museum - Zarosian VI", "Religious Iconography"] },
-            { name: "Inquisitor's ceremonial armour", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "Inquisitor's ceremonial mask", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "Inquisitor's seal", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "'The Lake of Fire' painting", collections: ["Anarchic Abstraction", "Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "'Lust' metal sculpture", collections: ["Showy Fings", "Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Gladiator helmet", collections: ["Entertaining the Masses", "Museum - Zarosian VII"] },
-            { name: "Gladiator sword", collections: ["Entertaining the Masses", "Museum - Zarosian VII"] },
-            { name: "Funerary urn of blood", collections: ["Museum - Zarosian VII", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Funerary urn of miasma", collections: ["Museum - Zarosian VII", "Urns of the Empire"] },
-            { name: "Model chariot", collections: ["Museum - Zarosian VII", "Entertaining the Masses"] },
-            { name: "'The Serpent's Fall' carving", collections: ["Museum - Zarosian VII", "Religious Iconography"] },
-            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal"] },
-            { name: "Spiked dog collar", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Bronze Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
-            { name: "Silver Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion torch", collections: ["Smoky Fings", "Saradominist II", "Museum - Saradominist II", "Mystery: Hallowed Be..."] },
-            { name: "Ikovian gerege", collections: ["Armadylean I", "Museum - Armadylean I", "Knowledge is Power", "Toolbelt: Stormguard access"] },
-            { name: "Toy glider", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Toy war golem", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ceremonial dragonkin device", collections: ["Desperate for Artefacts"] },
-            { name: "Decorative vase", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Kantharos cup", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Patera bowl", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Castle gatestone", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Engraved ring of kinship", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Ceremonial mace", collections: ["Hitty Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex Maximus figurine", collections: ["Showy Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "'Consensus ad Idem' painting", collections: ["Imperial Impressionism", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Wingsuit v1", collections: ["Toolbelt: Stormguard traversal"] },
-            { name: "Avian song-egg player", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Keshik drum", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Morin khuur", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Ekeleshuun blinder mask", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I", "Hat Problem"] },
-            { name: "Narogoshuun 'Hob-da-Gob' ball", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Rekeshuun war tether", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Exploratory totem", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Excavator portal mine", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Storage totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Plant seed satchel", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Snuff box", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Aviansie dreamcoat", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ceremonial plume", collections: ["Showy Fings", "Armadylean I", "Museum - Armadylean I"] },
-            { name: "Peacocking parasol", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ogre Kyzaj axe", collections: ["Red Rum Relics I", "Museum - Bandosian I"] },
-            { name: "Ork cleaver sword", collections: ["Red Rum Relics I", "Museum - Bandosian I"] },
-            { name: "Larupia trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Lion trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "She-wolf trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Pontifex censer", collections: ["Smoky Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex crozier", collections: ["Hitty Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex mitre", collections: ["Zarosian II", "Museum - Zarosian II", "Hat Hoarder"] },
-            { name: "Thorobshuun battle standard", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Yurkolgokh stink grenade", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Dominarian device", collections: ["Saradominist III", "Museum - Saradominist III", "Relic: Andvaranaut"] },
-            { name: "Fishing trident", collections: ["Hitty Fings", "Saradominist III", "Museum - Saradominist III"] },
-            { name: "Hawkeye lens multi-vision scope", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Talon-3 razor wing", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "'Exsanguinate' spell scroll", collections: ["Zarosian III", "Museum - Zarosian III", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Necromantic focus", collections: ["Zarosian III", "Museum - Zarosian III", "Knowledge is Power", "Imperial Sorcery"] },
-            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI", "Toolbelt: Daemonheim access"] },
-            { name: "'Friendship bracelet'", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Homely totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "High priest crozier", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
-            { name: "High priest mitre", collections: ["Green Gobbo Goodies II", "Museum - Bandosian I", "Hat Problem", "Magic Man"] },
-            { name: "High priest orb", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
-            { name: "'Torment' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "'Pandemonium' tapestry", collections: ["Anarchic Abstraction", "Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Ceremonial dragonkin tablet", collections: ["Desperate for Artefacts"] },
-            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I", "Crafting: Artificer's measure"] },
-            { name: "Ritual bell", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Prototype gravimeter", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Songbird recorder", collections: ["Armadylean II", "Museum - Armadylean II", "Wise Am the Music Man"] },
-            { name: "Amphora", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "Rod of Asclepius", collections: ["Showy Fings", "Saradominist III", "Museum - Saradominist III"] },
-            { name: "Zarosian ewer", collections: ["Zarosian III", "Museum - Zarosian III"] },
-            { name: "Zarosian stein", collections: ["Zarosian III", "Museum - Zarosian III"] },
-            { name: "Beastkeeper helm", collections: ["Red Rum Relics I", "Museum - Bandosian II", "Hat Problem"] },
-            { name: "Idithuun horn ring", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
-            { name: "'Nosorog!' sculpture", collections: ["Red Rum Relics I", "Museum - Bandosian II"] },
-            { name: "Dayguard shield", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Stormguard gerege", collections: ["Armadylean II", "Museum - Armadylean II", "Toolbelt: Howl's Workshop access"] },
-            { name: "Kilaya", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Vazara", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Ourg megahitter", collections: ["Red Rum Relics II", "Museum - Bandosian II", "Unlock Researcher: Asgarnia Smith"] },
-            { name: "Ourg tower/goblin cower shield", collections: ["Red Rum Relics II", "Museum - Bandosian II"] },
-            { name: "Garagorshuun anchor", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
-            { name: "Golem heart", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni"] },
-            { name: "Hellfire haladie", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Hellfire katar", collections: ["Zamorakian III", "Museum - Zamorakian III", "Relic: The Rings of Razulei"] },
-            { name: "Hellfire zaghnal", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Death mask", collections: ["Dragonkin I", "Museum - Dragonkin I", "Relic: Evil Bob's Catspaw"] },
-            { name: "Dragonkin calendar", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Dragonkin staff", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Dorgeshuun spear", collections: ["Green Gobbo Goodies III", "Museum - Bandosian II", "Mystery: You Have Chosen..."] },
-            { name: "'Forged in War' sculpture", collections: ["Red Rum Relics II", "Museum - Bandosian II", "Mystery: You Have Chosen..."] },
-            { name: "Kopis dagger", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "Xiphos short sword", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "'Smoke Cloud' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III", "Crafting: Artificer's measure"] },
-            { name: "Dragon scalpel", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
-            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Artificer's measure"] },
-            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Orthen furnace core"] },
-            { name: "Orthenglass flask", collections: ["Dragonkin II", "Museum - Dragonkin II", "Relic: Soma"] },
-            { name: "Blackfire lance", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Nightguard shield", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Projection attuner", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Golden projection 'needle'", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Huzamogaarb chaos crown", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Hat Problem"] },
-            { name: "Saragorgak star crown", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Hat Hoarder"] },
-            { name: "'Possession' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Trishula", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Tsutsaroth piercing", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "'Hallowed Be the Everlight' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "'The Lord of Light' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "'The Pride of Padosan' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "Meditation pipe", collections: ["Dragonkin III", "Museum - Dragonkin III"] },
-            { name: "Personal totem", collections: ["Dragonkin III", "Museum - Dragonkin III"] },
-            { name: "Singing bowl", collections: ["Dragonkin III", "Museum - Dragonkin III", "Mystery: Fragmented Memories"] },
-            { name: "Ancient magic tablet", collections: ["Zarosian III", "Museum - Zarosian III", "Imperial Sorcery"] },
-            { name: "'Animate Dead' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Portable phylactery", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Mystery: The Forgotten Prisoner"] },
-            { name: "Comfort gatestone", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Halak's cube", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Lingam stone", collections: ["Dragonkin III", "Museum - Dragonkin III", "Toolbelt: Xolo City access"] },
-            { name: "Master control", collections: ["Dragonkin III", "Museum - Dragonkin III", "Mystery: Fragmented Memories"] },
-            { name: "'The Enlightened Soul' scroll", collections: ["Knowledge is Power", "Museum - Saradominist IV", "Saradominist IV"] },
-            { name: "'The Eudoxian Elements' tablet", collections: ["Knowledge is Power", "Museum - Saradominist IV", "Saradominist IV"] },
-            { name: "Drogokishuun hook sword", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III"] },
-            { name: "Hobgoblin mansticker", collections: ["Red Rum Relics II", "Museum - Bandosian III"] },
-            { name: "Chaos Elemental trophy", collections: ["Museum - Zamorakian IV", "Zamorakian IV"] },
-            { name: "Virius trophy", collections: ["Museum - Zamorakian IV", "Zamorakian IV"] },
-            { name: "Flat cap", collections: ["Armadylean III", "Museum - Armadylean III", "Hat Problem"] },
-            { name: "Night owl flight goggles", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godbow", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godstaff", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godsword", collections: ["Armadylean III", "Museum - Armadylean III", "Relic: The Subtle Blade"] },
-            { name: "Xolo hard hat", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Xolo pickaxe", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Portable portal generator", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Warped trinket", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Praetorian hood", collections: ["Zarosian IV", "Museum - Zarosian IV", "Hat Problem"] },
-            { name: "Praetorian robes", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV", "Crafting: Inquisitor staff"] },
-            { name: "Kal-i-kra chieftain crown", collections: ["Red Rum Relics III", "Museum - Bandosian III", "Hat Hoarder"] },
-            { name: "Kal-i-kra mace", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
-            { name: "Kal-i-kra warhorn", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
-            { name: "Spear of Annihilation", collections: ["Weapon"] },
-            { name: "Tsutsaroth helm", collections: ["Zamorakian IV", "Museum - Zamorakian IV", "Hat Hoarder"] },
-            { name: "Tsutsaroth pauldron", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
-            { name: "Tsutsaroth urumi", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
-            { name: "Doru spear", collections: ["Saradominist IV", "Museum - Saradominist IV"] },
-            { name: "Kontos lance", collections: ["Saradominist IV", "Museum - Saradominist IV"] },
-            { name: "Chuluu stone", collections: ["Armadylean III", "Museum - Armadylean III", "Magic Man", "Relic: Experimental Aether Reactor"] },
-            { name: "Quintessence counter", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Spherical astrolabe", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Ancient globe", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Battle plans", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "'Prima Legio' painting", collections: ["Imperial Impressionism", "Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "'Da Boss Man' sculpture", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Knowledge is Power"] },
-            { name: "Horogothgar cooking pot", collections: ["Red Rum Relics III", "Green Gobbo Goodies III", "Museum - Bandosian III"] },
-            { name: "Xolo shield", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Xolo spear", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Gold dish", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] },
-            { name: "'Raksha' idol", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] }
-        ];
-        // --- END OF EDITABLE LIST ---
-
+        let artefacts = []; // This will be populated from Firebase
         let chartInstances = {};
-        let selectedArtefactName = null;
+        let selectedArtefactId = null; // Use the document ID for selection
+        let unsubscribe = null; // To store the real-time listener
+
+        // --- INITIALIZATION ---
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const artefactsCollection = collection(db, "artefacts");
 
         document.addEventListener('DOMContentLoaded', () => {
-            artefacts.forEach(a => a.requestedBy = {});
-
-            populateFilters();
             renderPlayerControls();
-            applyFilters(); 
+            setupRealtimeListener();
 
             document.getElementById('collection-filter').addEventListener('change', applyFilters);
             document.getElementById('artefact-search').addEventListener('input', applyFilters);
         });
 
+        // --- FIREBASE REAL-TIME LISTENER ---
+        function setupRealtimeListener() {
+            // Detach any existing listener
+            if (unsubscribe) {
+                unsubscribe();
+            }
+
+            // Listen for real-time updates on the 'artefacts' collection
+            unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
+                artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Sort by level, which we'll store as an attribute
+                artefacts.sort((a, b) => a.level - b.level);
+                
+                // One-time check to populate the database if it's empty
+                if (artefacts.length === 0) {
+                    populateDatabaseWithInitialData();
+                    return; // The listener will fire again once data is added
+                }
+
+                populateFilters();
+                applyFilters();
+                updatePlayerRequestDisplay(); // Update controls in case selected item changed
+            }, (error) => {
+                console.error("Error listening to artefact collection:", error);
+                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
+            });
+        }
+
+        // --- PLAYER CONTROLS & REQUEST LOGIC ---
         function renderPlayerControls() {
             const container = document.getElementById('player-controls');
             container.innerHTML = '';
@@ -356,17 +193,25 @@
                     <span id="count-${player}" class="font-bold w-6 text-center">0</span>
                     <button class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600">+</button>
                 `;
-                controlDiv.querySelector('button:first-of-type').onclick = () => removeRequest(player);
-                controlDiv.querySelector('button:last-of-type').onclick = () => addRequest(player);
+                controlDiv.querySelector('button:first-of-type').onclick = () => updateRequest(player, -1);
+                controlDiv.querySelector('button:last-of-type').onclick = () => updateRequest(player, 1);
                 container.appendChild(controlDiv);
             });
         }
 
         function updatePlayerRequestDisplay() {
-            const selectedArtefact = artefacts.find(a => a.name === selectedArtefactName);
+            const selectedArtefact = artefacts.find(a => a.id === selectedArtefactId);
+            const prompt = document.getElementById('request-prompt');
+
+            if (selectedArtefact) {
+                prompt.innerHTML = `Requesting: <strong class="text-amber-900">${selectedArtefact.name}</strong>`;
+            } else {
+                prompt.textContent = 'First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.';
+            }
+
             players.forEach(player => {
                 const countSpan = document.getElementById(`count-${player}`);
-                if (selectedArtefact && selectedArtefact.requestedBy[player]) {
+                if (selectedArtefact && selectedArtefact.requestedBy && selectedArtefact.requestedBy[player]) {
                     countSpan.textContent = selectedArtefact.requestedBy[player];
                 } else {
                     countSpan.textContent = '0';
@@ -374,38 +219,50 @@
             });
         }
 
-        function addRequest(playerName) {
-            if (!selectedArtefactName) {
-                alert('Please select an artefact from the table first!');
+        async function updateRequest(playerName, change) {
+            if (!selectedArtefactId) {
+                // A non-blocking notification is better than alert()
+                const prompt = document.getElementById('request-prompt');
+                prompt.textContent = 'Please select an artefact from the table first!';
+                prompt.classList.add('text-red-500');
+                setTimeout(() => {
+                    prompt.classList.remove('text-red-500');
+                    updatePlayerRequestDisplay(); // Revert to original text
+                }, 2000);
                 return;
             }
-            const artefact = artefacts.find(a => a.name === selectedArtefactName);
-            if (artefact) {
-                artefact.requestedBy[playerName] = (artefact.requestedBy[playerName] || 0) + 1;
-                applyFilters();
-                updatePlayerRequestDisplay();
-            }
-        }
-        
-        function removeRequest(playerName) {
-            if (!selectedArtefactName) {
-                alert('Please select an artefact from the table first!');
-                return;
-            }
-            const artefact = artefacts.find(a => a.name === selectedArtefactName);
-            if (artefact && artefact.requestedBy[playerName] > 0) {
-                artefact.requestedBy[playerName]--;
-                if (artefact.requestedBy[playerName] === 0) {
-                    delete artefact.requestedBy[playerName];
+
+            const artefactRef = doc(db, "artefacts", selectedArtefactId);
+            
+            try {
+                const docSnap = await getDoc(artefactRef);
+                if (docSnap.exists()) {
+                    const artefact = docSnap.data();
+                    const currentRequests = artefact.requestedBy || {};
+                    const currentCount = currentRequests[playerName] || 0;
+                    
+                    const newCount = Math.max(0, currentCount + change);
+
+                    if (newCount > 0) {
+                        currentRequests[playerName] = newCount;
+                    } else {
+                        delete currentRequests[playerName]; // Clean up if count is 0
+                    }
+
+                    // Update the document in Firestore
+                    await setDoc(artefactRef, { requestedBy: currentRequests }, { merge: true });
+                    // The onSnapshot listener will handle the UI update automatically
                 }
-                applyFilters();
-                updatePlayerRequestDisplay();
+            } catch (error) {
+                console.error("Error updating request:", error);
             }
         }
 
+        // --- FILTERING AND RENDERING ---
         function populateFilters() {
             const collectionFilter = document.getElementById('collection-filter');
-            collectionFilter.innerHTML = '<option value="all">All Collections</option>'; // Clear previous options
+            const currentVal = collectionFilter.value;
+            collectionFilter.innerHTML = '<option value="all">All Collections</option>';
             const collections = [...new Set(artefacts.flatMap(a => a.collections))].sort();
             collections.forEach(collection => {
                 const option = document.createElement('option');
@@ -413,6 +270,7 @@
                 option.textContent = collection;
                 collectionFilter.appendChild(option);
             });
+            collectionFilter.value = currentVal; // Preserve selection
         }
 
         function applyFilters() {
@@ -440,29 +298,30 @@
 
             data.forEach(artefact => {
                 const row = document.createElement('tr');
-                row.className = `bg-white border-b hover:bg-amber-100 cursor-pointer ${artefact.name === selectedArtefactName ? 'selected-row' : ''}`;
+                row.className = `bg-white border-b hover:bg-amber-100 cursor-pointer ${artefact.id === selectedArtefactId ? 'selected-row' : ''}`;
                 row.onclick = () => {
-                    selectedArtefactName = artefact.name;
-                    renderTable(data); // Re-render to update selection highlight
+                    selectedArtefactId = artefact.id;
+                    applyFilters(); // Re-render to update selection highlight
                     updatePlayerRequestDisplay();
                 };
 
-                const totalRequests = Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0);
-                const requestersString = Object.entries(artefact.requestedBy)
+                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0) : 0;
+                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
                     .map(([name, count]) => `${name} (x${count})`)
                     .sort()
-                    .join(', ');
+                    .join(', ') : '';
 
                 row.innerHTML = `
                     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${artefact.name}</td>
                     <td class="px-6 py-4">${artefact.collections.join(', ')}</td>
                     <td class="px-6 py-4 font-bold text-center">${totalRequests}</td>
-                    <td class="px-6 py-4">${requestersString}</td>
+                    <td class="px-6 py-4">${requestersString || 'None'}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
         
+        // --- CHART RENDERING ---
         function renderCharts(data) {
             renderCollectionChart(data);
         }
@@ -504,6 +363,45 @@
                     maintainAspectRatio: false,
                 }
             });
+        }
+        
+        // --- ONE-TIME DATABASE POPULATION ---
+        // This function runs only if the 'artefacts' collection is empty.
+        async function populateDatabaseWithInitialData() {
+            const tableBody = document.getElementById('artefact-table-body');
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Database is empty. Populating with initial data...</td></tr>`;
+            
+            const initialArtefacts = [
+                // The full list of artefacts from your original file, with a 'level' property added.
+                // I've added the first few as an example. You would copy your full list here.
+                { level: 1, name: "Centurion's dress sword", collections: ["Museum - Training Weapons (tutorial-only)"] },
+                { level: 5, name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
+                { level: 5, name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
+                { level: 12, name: "Centurion's seal", collections: ["Mystery: Breaking the Seal"] },
+                // ... PASTE THE REST OF YOUR ARTEFACT LIST HERE, adding a 'level' for sorting ...
+                { level: 119, name: "'Raksha' idol", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] }
+            ];
+
+            // Use a batch write for efficiency
+            const batch = writeBatch(db);
+            initialArtefacts.forEach(artefact => {
+                const docRef = doc(artefactsCollection); // Firestore will generate a unique ID
+                batch.set(docRef, {
+                    name: artefact.name,
+                    collections: artefact.collections,
+                    level: artefact.level,
+                    requestedBy: {} // Initialize with empty requests
+                });
+            });
+
+            try {
+                await batch.commit();
+                console.log("Database populated successfully!");
+                // The onSnapshot listener will automatically pick up the new data and re-render the table.
+            } catch (error) {
+                console.error("Error populating database: ", error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Failed to populate database.</td></tr>`;
+            }
         }
     </script>
 </body>
