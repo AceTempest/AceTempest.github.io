@@ -1,3 +1,4 @@
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -162,8 +163,6 @@
             // Listen for real-time updates on the 'artefacts' collection
             unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
                 artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sort by level, which we'll store as an attribute
-                artefacts.sort((a, b) => a.level - b.level);
                 
                 // One-time check to populate the database if it's empty
                 if (artefacts.length === 0) {
@@ -372,7 +371,6 @@
             tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Database is empty. Populating with initial data...</td></tr>`;
             
             const initialArtefacts = [
-                // The full list of artefacts from your original file, with a 'level' property added.
                 // I've added the first few as an example. You would copy your full list here.
             { name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
@@ -598,7 +596,6 @@
                 batch.set(docRef, {
                     name: artefact.name,
                     collections: artefact.collections,
-                    level: artefact.level,
                     requestedBy: {} // Initialize with empty requests
                 });
             });
