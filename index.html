@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -90,7 +89,7 @@
                             </tr>
                         </thead>
                         <tbody id="artefact-table-body">
-                           <tr><td colspan="4"><div class="loader"></div><p class="text-center">Loading Artefacts...</p></td></tr>
+                           <tr><td colspan="4"><div class="loader"></div><p class="text-center">Loading Artefacts from Database...</p></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -113,265 +112,13 @@
             <p>Created for the RuneScape community. All data is based on community-driven sources.</p>
         </footer>
     </div>
-
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
-        // This object is provided by Firebase when you create a new web app.
-        // It's safe to expose this in your client-side code.
-        const firebaseConfig = {
-            apiKey: "AIzaSyB7XlmkRWHkTIwTQQYzhtLDp0NBy_rTeKE",
-            authDomain: "tci-gim-artefact-requesting.firebaseapp.com",
-            projectId: "tci-gim-artefact-requesting",
-            storageBucket: "tci-gim-artefact-requesting.appspot.com",
-            messagingSenderId: "1004367201833",
-            appId: "1:1004367201833:web:39bb7f3762443da04c7e38"
-        };
-        // --- END OF FIREBASE CONFIGURATION ---
-
-        // --- GLOBAL VARIABLES ---
-        const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
-        let artefacts = []; // This will be populated from Firebase
-        let chartInstances = {};
-        let selectedArtefactId = null; // Use the document ID for selection
-        let unsubscribe = null; // To store the real-time listener
-
-        // --- INITIALIZATION ---
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const artefactsCollection = collection(db, "artefacts");
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderPlayerControls();
-            setupRealtimeListener();
-
-            document.getElementById('collection-filter').addEventListener('change', applyFilters);
-            document.getElementById('artefact-search').addEventListener('input', applyFilters);
-        });
-
-        // --- FIREBASE REAL-TIME LISTENER ---
-        function setupRealtimeListener() {
-            // Detach any existing listener
-            if (unsubscribe) {
-                unsubscribe();
-            }
-
-            // Listen for real-time updates on the 'artefacts' collection
-            unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
-                artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // One-time check to populate the database if it's empty
-                if (artefacts.length === 0) {
-                    populateDatabaseWithInitialData();
-                    return; // The listener will fire again once data is added
-                }
-
-                populateFilters();
-                applyFilters();
-                updatePlayerRequestDisplay(); // Update controls in case selected item changed
-            }, (error) => {
-                console.error("Error listening to artefact collection:", error);
-                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
-            });
-        }
-
-        // --- PLAYER CONTROLS & REQUEST LOGIC ---
-        function renderPlayerControls() {
-            const container = document.getElementById('player-controls');
-            container.innerHTML = '';
-            players.forEach(player => {
-                const controlDiv = document.createElement('div');
-                controlDiv.className = 'flex items-center gap-2 p-2 bg-white rounded-lg border border-amber-200 shadow-sm';
-                controlDiv.innerHTML = `
-                    <span class="font-semibold text-amber-800 w-24 text-left">${player}</span>
-                    <button class="px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600">-</button>
-                    <span id="count-${player}" class="font-bold w-6 text-center">0</span>
-                    <button class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600">+</button>
-                `;
-                controlDiv.querySelector('button:first-of-type').onclick = () => updateRequest(player, -1);
-                controlDiv.querySelector('button:last-of-type').onclick = () => updateRequest(player, 1);
-                container.appendChild(controlDiv);
-            });
-        }
-
-        function updatePlayerRequestDisplay() {
-            const selectedArtefact = artefacts.find(a => a.id === selectedArtefactId);
-            const prompt = document.getElementById('request-prompt');
-
-            if (selectedArtefact) {
-                prompt.innerHTML = `Requesting: <strong class="text-amber-900">${selectedArtefact.name}</strong>`;
-            } else {
-                prompt.textContent = 'First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.';
-            }
-
-            players.forEach(player => {
-                const countSpan = document.getElementById(`count-${player}`);
-                if (selectedArtefact && selectedArtefact.requestedBy && selectedArtefact.requestedBy[player]) {
-                    countSpan.textContent = selectedArtefact.requestedBy[player];
-                } else {
-                    countSpan.textContent = '0';
-                }
-            });
-        }
-
-        async function updateRequest(playerName, change) {
-            if (!selectedArtefactId) {
-                // A non-blocking notification is better than alert()
-                const prompt = document.getElementById('request-prompt');
-                prompt.textContent = 'Please select an artefact from the table first!';
-                prompt.classList.add('text-red-500');
-                setTimeout(() => {
-                    prompt.classList.remove('text-red-500');
-                    updatePlayerRequestDisplay(); // Revert to original text
-                }, 2000);
-                return;
-            }
-
-            const artefactRef = doc(db, "artefacts", selectedArtefactId);
-            
-            try {
-                const docSnap = await getDoc(artefactRef);
-                if (docSnap.exists()) {
-                    const artefact = docSnap.data();
-                    const currentRequests = artefact.requestedBy || {};
-                    const currentCount = currentRequests[playerName] || 0;
-                    
-                    const newCount = Math.max(0, currentCount + change);
-
-                    if (newCount > 0) {
-                        currentRequests[playerName] = newCount;
-                    } else {
-                        delete currentRequests[playerName]; // Clean up if count is 0
-                    }
-
-                    // Update the document in Firestore
-                    await setDoc(artefactRef, { requestedBy: currentRequests }, { merge: true });
-                    // The onSnapshot listener will handle the UI update automatically
-                }
-            } catch (error) {
-                console.error("Error updating request:", error);
-            }
-        }
-
-        // --- FILTERING AND RENDERING ---
-        function populateFilters() {
-            const collectionFilter = document.getElementById('collection-filter');
-            const currentVal = collectionFilter.value;
-            collectionFilter.innerHTML = '<option value="all">All Collections</option>';
-            const collections = [...new Set(artefacts.flatMap(a => a.collections))].sort();
-            collections.forEach(collection => {
-                const option = document.createElement('option');
-                option.value = collection;
-                option.textContent = collection;
-                collectionFilter.appendChild(option);
-            });
-            collectionFilter.value = currentVal; // Preserve selection
-        }
-
-        function applyFilters() {
-            const collection = document.getElementById('collection-filter').value;
-            const searchTerm = document.getElementById('artefact-search').value.toLowerCase();
-
-            let filteredArtefacts = artefacts.filter(artefact => {
-                const inCollection = collection === 'all' || artefact.collections.includes(collection);
-                const matchesSearch = artefact.name.toLowerCase().includes(searchTerm);
-                return inCollection && matchesSearch;
-            });
-            
-            renderTable(filteredArtefacts);
-            renderCharts(filteredArtefacts);
-        }
-
-        function renderTable(data) {
-            const tableBody = document.getElementById('artefact-table-body');
-            tableBody.innerHTML = '';
-
-            if (data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
-                return;
-            }
-
-            data.forEach(artefact => {
-                const row = document.createElement('tr');
-                row.className = `bg-white border-b hover:bg-amber-100 cursor-pointer ${artefact.id === selectedArtefactId ? 'selected-row' : ''}`;
-                row.onclick = () => {
-                    selectedArtefactId = artefact.id;
-                    applyFilters(); // Re-render to update selection highlight
-                    updatePlayerRequestDisplay();
-                };
-
-                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0) : 0;
-                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
-                    .map(([name, count]) => `${name} (x${count})`)
-                    .sort()
-                    .join(', ') : '';
-
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${artefact.name}</td>
-                    <td class="px-6 py-4">${artefact.collections.join(', ')}</td>
-                    <td class="px-6 py-4 font-bold text-center">${totalRequests}</td>
-                    <td class="px-6 py-4">${requestersString || 'None'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // --- CHART RENDERING ---
-        function renderCharts(data) {
-            renderCollectionChart(data);
-        }
-
-        function renderCollectionChart(data) {
-            const ctx = document.getElementById('collection-chart').getContext('2d');
-            const collectionCounts = data.reduce((acc, artefact) => {
-                artefact.collections.forEach(collection => {
-                    acc[collection] = (acc[collection] || 0) + 1;
-                });
-                return acc;
-            }, {});
-
-            const labels = Object.keys(collectionCounts).sort();
-            const counts = labels.map(label => collectionCounts[label]);
-
-            if (chartInstances.collection) {
-                chartInstances.collection.destroy();
-            }
-
-            chartInstances.collection = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Artefacts in Collection',
-                        data: counts,
-                        backgroundColor: [
-                            'rgba(217, 119, 6, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(251, 191, 36, 0.7)',
-                            'rgba(161, 98, 7, 0.7)', 'rgba(120, 53, 15, 0.7)', 'rgba(234, 179, 8, 0.7)',
-                            'rgba(202, 138, 4, 0.7)', 'rgba(180, 83, 9, 0.7)', 'rgba(109, 40, 217, 0.7)', 'rgba(219, 39, 119, 0.7)'
-                        ],
-                        borderColor: '#FDF6E3',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
-            });
-        }
-        
-        // --- ONE-TIME DATABASE POPULATION ---
-        // This function runs only if the 'artefacts' collection is empty.
-        async function populateDatabaseWithInitialData() {
-            const tableBody = document.getElementById('artefact-table-body');
-            tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Database is empty. Populating with initial data...</td></tr>`;
-            
-            const initialArtefacts = [
-                // I've added the first few as an example. You would copy your full list here.
+    
+    <!-- This script tag contains the master list of artefacts. -->
+    <!-- EDIT THIS LIST to add, remove, or change artefacts. -->
+    <!-- After editing, upload the file and click the "Sync Master List" button on the webpage. -->
+    <script id="artefact-master-list">
+        const masterArtefactList = [
+            { name: "Centurion's dress sword", collections: ["Museum - Training Weapons (tutorial-only)"] },
             { name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Centurion's seal", collections: ["Mystery: Breaking the Seal"] },
@@ -588,26 +335,327 @@
             { name: "Gold dish", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] },
             { name: "'Raksha' idol", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] }
         ];
+    </script>
 
-            // Use a batch write for efficiency
-            const batch = writeBatch(db);
-            initialArtefacts.forEach(artefact => {
-                const docRef = doc(artefactsCollection); // Firestore will generate a unique ID
-                batch.set(docRef, {
-                    name: artefact.name,
-                    collections: artefact.collections,
-                    requestedBy: {} // Initialize with empty requests
-                });
-            });
+    <!-- Main Application Logic -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7XlmkRWHkTIwTQQYzhtLDp0NBy_rTeKE",
+            authDomain: "tci-gim-artefact-requesting.firebaseapp.com",
+            projectId: "tci-gim-artefact-requesting",
+            storageBucket: "tci-gim-artefact-requesting.appspot.com",
+            messagingSenderId: "1004367201833",
+            appId: "1:1004367201833:web:39bb7f3762443da04c7e38"
+        };
+        // --- END OF FIREBASE CONFIGURATION ---
+
+        // --- GLOBAL VARIABLES ---
+        const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
+        let artefacts = []; // This will be populated from Firebase
+        let chartInstances = {};
+        let selectedArtefactId = null; // Use the document ID for selection
+        let unsubscribe = null; // To store the real-time listener
+
+        // --- INITIALIZATION ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const artefactsCollection = collection(db, "artefacts");
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPlayerControls();
+            setupRealtimeListener();
+
+            document.getElementById('collection-filter').addEventListener('change', applyFilters);
+            document.getElementById('artefact-search').addEventListener('input', applyFilters);
+            document.getElementById('sync-button').addEventListener('click', syncDatabaseWithMasterList);
+        });
+
+        // --- DATABASE SYNC LOGIC ---
+        async function syncDatabaseWithMasterList() {
+            const syncButton = document.getElementById('sync-button');
+            const syncStatus = document.getElementById('sync-status');
+
+            syncButton.disabled = true;
+            syncButton.textContent = 'Syncing...';
+            syncStatus.textContent = 'Fetching current data from database...';
 
             try {
-                await batch.commit();
-                console.log("Database populated successfully!");
-                // The onSnapshot listener will automatically pick up the new data and re-render the table.
+                // 1. Get the master list from the HTML. Add a sortOrder property.
+                const localMasterList = masterArtefactList.map((artefact, index) => ({
+                    ...artefact,
+                    sortOrder: index
+                }));
+                const localMasterMap = new Map(localMasterList.map(a => [a.name, a]));
+
+                // 2. Get all existing documents from Firestore.
+                const querySnapshot = await getDocs(query(artefactsCollection));
+                const dbArtefacts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const dbArtefactsMap = new Map(dbArtefacts.map(a => [a.name, a]));
+
+                syncStatus.textContent = 'Comparing lists and preparing updates...';
+
+                const batch = writeBatch(db);
+                let added = 0, updated = 0, removed = 0;
+
+                // 3. Iterate through the local master list to find items to add or update.
+                for (const [name, localArtefact] of localMasterMap.entries()) {
+                    const dbArtefact = dbArtefactsMap.get(name);
+                    if (dbArtefact) {
+                        // Artefact exists in DB. Check if an update is needed.
+                        if (dbArtefact.sortOrder !== localArtefact.sortOrder || JSON.stringify(dbArtefact.collections) !== JSON.stringify(localArtefact.collections)) {
+                            const docRef = doc(db, "artefacts", dbArtefact.id);
+                            batch.update(docRef, {
+                                collections: localArtefact.collections,
+                                sortOrder: localArtefact.sortOrder
+                            });
+                            updated++;
+                        }
+                    } else {
+                        // Artefact does not exist in DB. Add it.
+                        const newDocRef = doc(artefactsCollection);
+                        batch.set(newDocRef, { ...localArtefact, requestedBy: {} });
+                        added++;
+                    }
+                }
+
+                // 4. Iterate through the database list to find items to delete.
+                for (const [name, dbArtefact] of dbArtefactsMap.entries()) {
+                    if (!localMasterMap.has(name)) {
+                        // Artefact in DB is not in the local master list. Delete it.
+                        const docRef = doc(db, "artefacts", dbArtefact.id);
+                        batch.delete(docRef);
+                        removed++;
+                    }
+                }
+
+                // 5. Commit the batch write.
+                if (added > 0 || updated > 0 || removed > 0) {
+                    syncStatus.textContent = `Applying changes: ${added} added, ${updated} updated, ${removed} removed.`;
+                    await batch.commit();
+                    syncStatus.textContent = `Sync complete! ${added} added, ${updated} updated, ${removed} removed.`;
+                } else {
+                    syncStatus.textContent = 'Database is already up to date. No changes needed.';
+                }
+
             } catch (error) {
-                console.error("Error populating database: ", error);
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Failed to populate database.</td></tr>`;
+                console.error("Error syncing database:", error);
+                syncStatus.textContent = 'An error occurred during sync. Check the console.';
+                syncStatus.classList.add('text-red-500');
+            } finally {
+                setTimeout(() => {
+                    syncStatus.textContent = '';
+                    syncStatus.classList.remove('text-red-500');
+                    syncButton.disabled = false;
+                    syncButton.textContent = 'Sync Master List';
+                }, 5000);
             }
+        }
+
+
+        // --- FIREBASE REAL-TIME LISTENER ---
+        function setupRealtimeListener() {
+            if (unsubscribe) unsubscribe();
+
+            unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
+                if (snapshot.empty) {
+                     document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4">Database is empty. Please use the "Sync Master List" button to populate it.</td></tr>`;
+                     return;
+                }
+                artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                artefacts.sort((a, b) => a.sortOrder - b.sortOrder);
+                
+                populateFilters();
+                applyFilters();
+                updatePlayerRequestDisplay();
+            }, (error) => {
+                console.error("Error listening to artefact collection:", error);
+                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
+            });
+        }
+
+        // --- PLAYER CONTROLS & REQUEST LOGIC ---
+        function renderPlayerControls() {
+            const container = document.getElementById('player-controls');
+            container.innerHTML = '';
+            players.forEach(player => {
+                const controlDiv = document.createElement('div');
+                controlDiv.className = 'flex items-center gap-2 p-2 bg-white rounded-lg border border-amber-200 shadow-sm';
+                controlDiv.innerHTML = `
+                    <span class="font-semibold text-amber-800 w-24 text-left">${player}</span>
+                    <button class="px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600">-</button>
+                    <span id="count-${player}" class="font-bold w-6 text-center">0</span>
+                    <button class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600">+</button>
+                `;
+                controlDiv.querySelector('button:first-of-type').onclick = () => updateRequest(player, -1);
+                controlDiv.querySelector('button:last-of-type').onclick = () => updateRequest(player, 1);
+                container.appendChild(controlDiv);
+            });
+        }
+
+        function updatePlayerRequestDisplay() {
+            const selectedArtefact = artefacts.find(a => a.id === selectedArtefactId);
+            const prompt = document.getElementById('request-prompt');
+
+            if (selectedArtefact) {
+                prompt.innerHTML = `Requesting: <strong class="text-amber-900">${selectedArtefact.name}</strong>`;
+            } else {
+                prompt.textContent = 'First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.';
+            }
+
+            players.forEach(player => {
+                const countSpan = document.getElementById(`count-${player}`);
+                if (selectedArtefact && selectedArtefact.requestedBy && selectedArtefact.requestedBy[player]) {
+                    countSpan.textContent = selectedArtefact.requestedBy[player];
+                } else {
+                    countSpan.textContent = '0';
+                }
+            });
+        }
+
+        async function updateRequest(playerName, change) {
+            if (!selectedArtefactId) {
+                const prompt = document.getElementById('request-prompt');
+                prompt.textContent = 'Please select an artefact from the table first!';
+                prompt.classList.add('text-red-500');
+                setTimeout(() => {
+                    prompt.classList.remove('text-red-500');
+                    updatePlayerRequestDisplay();
+                }, 2000);
+                return;
+            }
+
+            const artefactRef = doc(db, "artefacts", selectedArtefactId);
+            
+            try {
+                const docSnap = await getDoc(artefactRef);
+                if (docSnap.exists()) {
+                    const artefact = docSnap.data();
+                    const currentRequests = artefact.requestedBy || {};
+                    const currentCount = currentRequests[playerName] || 0;
+                    const newCount = Math.max(0, currentCount + change);
+
+                    if (newCount > 0) {
+                        currentRequests[playerName] = newCount;
+                    } else {
+                        delete currentRequests[playerName];
+                    }
+                    await setDoc(artefactRef, { requestedBy: currentRequests }, { merge: true });
+                }
+            } catch (error) {
+                console.error("Error updating request:", error);
+            }
+        }
+
+        // --- FILTERING AND RENDERING ---
+        function populateFilters() {
+            const collectionFilter = document.getElementById('collection-filter');
+            const currentVal = collectionFilter.value;
+            collectionFilter.innerHTML = '<option value="all">All Collections</option>';
+            const collections = [...new Set(artefacts.flatMap(a => a.collections))].sort();
+            collections.forEach(collection => {
+                const option = document.createElement('option');
+                option.value = collection;
+                option.textContent = collection;
+                collectionFilter.appendChild(option);
+            });
+            collectionFilter.value = currentVal;
+        }
+
+        function applyFilters() {
+            const collection = document.getElementById('collection-filter').value;
+            const searchTerm = document.getElementById('artefact-search').value.toLowerCase();
+
+            let filteredArtefacts = artefacts.filter(artefact => {
+                const inCollection = collection === 'all' || artefact.collections.includes(collection);
+                const matchesSearch = artefact.name.toLowerCase().includes(searchTerm);
+                return inCollection && matchesSearch;
+            });
+            
+            renderTable(filteredArtefacts);
+            renderCharts(filteredArtefacts);
+        }
+
+        function renderTable(data) {
+            const tableBody = document.getElementById('artefact-table-body');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0 && artefacts.length > 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
+                return;
+            }
+
+            data.forEach(artefact => {
+                const row = document.createElement('tr');
+                row.className = `bg-white border-b hover:bg-amber-100 cursor-pointer ${artefact.id === selectedArtefactId ? 'selected-row' : ''}`;
+                row.onclick = () => {
+                    selectedArtefactId = artefact.id;
+                    applyFilters();
+                    updatePlayerRequestDisplay();
+                };
+
+                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0) : 0;
+                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
+                    .map(([name, count]) => `${name} (x${count})`)
+                    .sort()
+                    .join(', ') : '';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${artefact.name}</td>
+                    <td class="px-6 py-4">${artefact.collections.join(', ')}</td>
+                    <td class="px-6 py-4 font-bold text-center">${totalRequests}</td>
+                    <td class="px-6 py-4">${requestersString || 'None'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // --- CHART RENDERING ---
+        function renderCharts(data) {
+            renderCollectionChart(data);
+        }
+
+        function renderCollectionChart(data) {
+            const ctx = document.getElementById('collection-chart').getContext('2d');
+            const collectionCounts = data.reduce((acc, artefact) => {
+                artefact.collections.forEach(collection => {
+                    acc[collection] = (acc[collection] || 0) + 1;
+                });
+                return acc;
+            }, {});
+
+            const labels = Object.keys(collectionCounts).sort();
+            const counts = labels.map(label => collectionCounts[label]);
+
+            if (chartInstances.collection) {
+                chartInstances.collection.destroy();
+            }
+
+            chartInstances.collection = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Artefacts in Collection',
+                        data: counts,
+                        backgroundColor: [
+                            'rgba(217, 119, 6, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(251, 191, 36, 0.7)',
+                            'rgba(161, 98, 7, 0.7)', 'rgba(120, 53, 15, 0.7)', 'rgba(234, 179, 8, 0.7)',
+                            'rgba(202, 138, 4, 0.7)', 'rgba(180, 83, 9, 0.7)', 'rgba(109, 40, 217, 0.7)', 'rgba(219, 39, 119, 0.7)'
+                        ],
+                        borderColor: '#FDF6E3',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
         }
     </script>
 </body>
