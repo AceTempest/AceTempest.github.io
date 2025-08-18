@@ -545,7 +545,8 @@
                 const docSnap = await getDoc(artefactRef);
                 if (docSnap.exists()) {
                     const artefact = docSnap.data();
-                    const currentRequests = artefact.requestedBy || {};
+                    // Create a safe copy of the requests object to modify
+                    const currentRequests = { ...(artefact.requestedBy || {}) };
                     const currentCount = currentRequests[playerName] || 0;
                     const newCount = Math.max(0, currentCount + change);
 
