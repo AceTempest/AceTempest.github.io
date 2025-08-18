@@ -35,13 +35,13 @@
 </head>
 <body class="font-sans text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8">
+<div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-amber-900">RuneScape 3 Archaeology Tracker</h1>
             <p class="text-lg text-amber-700 mt-2">Explore, filter, and track all Archaeology artefacts.</p>
         </header>
 
-        <main>
+<main>
             <!-- Player Request Section -->
             <section id="player-requests" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
                 <h2 class="text-xl font-bold text-amber-900 mb-2">Manage Artefact Requests</h2>
@@ -52,7 +52,7 @@
             </section>
 
             <!-- Filtering and Search Section -->
-            <section id="filters" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md">
+<section id="filters" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="collection-filter" class="block text-sm font-medium text-amber-800 mb-1">Filter by Collection / Use</label>
@@ -68,7 +68,7 @@
             </section>
 
             <!-- Artefacts Table Section -->
-            <section id="artefact-table-section" class="bg-white p-6 rounded-lg shadow-lg">
+ <section id="artefact-table-section" class="bg-white p-6 rounded-lg shadow-lg">
                  <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-600">
                         <thead class="text-xs text-amber-800 uppercase bg-amber-100">
@@ -87,7 +87,7 @@
             </section>
             
             <!-- Charts Section -->
-            <section id="charts" class="mt-8">
+  <section id="charts" class="mt-8">
                 <div class="flex justify-center">
                     <div class="bg-white p-6 rounded-lg shadow-lg w-full lg:w-2/3">
                         <h2 class="text-xl font-bold text-amber-900 mb-4 text-center">Artefacts per Collection</h2>
@@ -99,12 +99,12 @@
             </section>
         </main>
 
-        <footer class="text-center mt-12 text-sm text-amber-600">
+  <footer class="text-center mt-12 text-sm text-amber-600">
             <p>Created for the RuneScape community. All data is based on community-driven sources.</p>
         </footer>
     </div>
 
-    <script>
+ <script>
         const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
 
         // --- EDIT THIS LIST ---
