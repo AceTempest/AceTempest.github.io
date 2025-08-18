@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RuneScape 3 - Shared Archaeology Artefact Tracker</title>
+    <title>TCI Artefacts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -51,6 +51,17 @@
         </header>
 
         <main>
+
+            <!-- Admin/Sync Section -->
+            <section id="admin-section" class="mb-8 p-6 bg-amber-100 border border-amber-300 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-bold text-amber-900 mb-2">Resync Button</h2>
+                <p class="text-amber-800 mb-4">Please don't fuck with this.</p>
+                <button id="sync-button" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300">
+                    Resync
+                </button>
+                <p id="sync-status" class="mt-2 text-sm text-gray-600"></p>
+            </section>
+            
             <!-- Player Request Section -->
             <section id="player-requests" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
                 <h2 class="text-xl font-bold text-amber-900 mb-2">How To Requests Artefacts.</h2>
@@ -174,7 +185,7 @@
             { name: "Funerary urn of miasma", collections: ["Museum - Zarosian VII", "Urns of the Empire"] },
             { name: "Model chariot", collections: ["Museum - Zarosian VII", "Entertaining the Masses"] },
             { name: "'The Serpent's Fall' carving", collections: ["Museum - Zarosian VII", "Religious Iconography"] },
-            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal"] },
+            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal", "Nexus Mod relic power"] },
             { name: "Spiked dog collar", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
             { name: "Bronze Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
             { name: "Silver Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
@@ -182,7 +193,6 @@
             { name: "Ikovian gerege", collections: ["Armadylean I", "Museum - Armadylean I", "Knowledge is Power", "Toolbelt: Stormguard access"] },
             { name: "Toy glider", collections: ["Armadylean I", "Museum - Armadylean I"] },
             { name: "Toy war golem", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ceremonial dragonkin device", collections: ["Desperate for Artefacts"] },
             { name: "Decorative vase", collections: ["Saradominist II", "Museum - Saradominist II"] },
             { name: "Kantharos cup", collections: ["Saradominist II", "Museum - Saradominist II"] },
             { name: "Patera bowl", collections: ["Saradominist II", "Museum - Saradominist II"] },
@@ -221,7 +231,7 @@
             { name: "Talon-3 razor wing", collections: ["Armadylean II", "Museum - Armadylean II"] },
             { name: "'Exsanguinate' spell scroll", collections: ["Zarosian III", "Museum - Zarosian III", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
             { name: "Necromantic focus", collections: ["Zarosian III", "Museum - Zarosian III", "Knowledge is Power", "Imperial Sorcery"] },
-            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI", "Toolbelt: Daemonheim access"] },
+            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
             { name: "'Friendship bracelet'", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
             { name: "Homely totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
             { name: "High priest crozier", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
@@ -229,7 +239,7 @@
             { name: "High priest orb", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
             { name: "'Torment' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
             { name: "'Pandemonium' tapestry", collections: ["Anarchic Abstraction", "Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I", "Crafting: Artificer's measure"] },
+            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
             { name: "Ritual bell", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
             { name: "Prototype gravimeter", collections: ["Armadylean II", "Museum - Armadylean II"] },
             { name: "Songbird recorder", collections: ["Armadylean II", "Museum - Armadylean II", "Wise Am the Music Man"] },
@@ -248,7 +258,7 @@
             { name: "Ourg tower/goblin cower shield", collections: ["Red Rum Relics II", "Museum - Bandosian II"] },
             { name: "Garagorshuun anchor", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
             { name: "Golem heart", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni"] },
+            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni","Divine Conversion relic power."] },
             { name: "Hellfire haladie", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
             { name: "Hellfire katar", collections: ["Zamorakian III", "Museum - Zamorakian III", "Relic: The Rings of Razulei"] },
             { name: "Hellfire zaghnal", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
@@ -260,10 +270,10 @@
             { name: "Kopis dagger", collections: ["Saradominist III", "Museum - Saradominist III"] },
             { name: "Xiphos short sword", collections: ["Saradominist III", "Museum - Saradominist III"] },
             { name: "'Smoke Cloud' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III", "Crafting: Artificer's measure"] },
+            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III"] },
             { name: "Dragon scalpel", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
-            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Artificer's measure"] },
-            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Orthen furnace core"] },
+            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
+            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
             { name: "Orthenglass flask", collections: ["Dragonkin II", "Museum - Dragonkin II", "Relic: Soma"] },
             { name: "Blackfire lance", collections: ["Armadylean III", "Museum - Armadylean III"] },
             { name: "Nightguard shield", collections: ["Armadylean III", "Museum - Armadylean III"] },
@@ -304,7 +314,7 @@
             { name: "Warped trinket", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
             { name: "Praetorian hood", collections: ["Zarosian IV", "Museum - Zarosian IV", "Hat Problem"] },
             { name: "Praetorian robes", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV", "Crafting: Inquisitor staff"] },
+            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
             { name: "Kal-i-kra chieftain crown", collections: ["Red Rum Relics III", "Museum - Bandosian III", "Hat Hoarder"] },
             { name: "Kal-i-kra mace", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
             { name: "Kal-i-kra warhorn", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
