@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RuneScape 3 - Shared Archaeology Artefact Tracker</title>
+    <title>TCI Artifacts</title>
     <link rel="icon" type="image/png" href="https://runescape.wiki/images/Archaeology-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -54,22 +55,21 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-amber-900">TCI GIM Artefact Request System</h1>
+            <h1 class="text-4xl md:text-5xl font-bold text-amber-900">TCI Artifacts</h1>
             <p class="text-lg text-amber-700 mt-2">Request artefacts easily utilizing this tool.</p>
         </header>
 
         <main>
-
-            <!-- Admin/Sync Section -->
-            <!-- <section id="admin-section" class="mb-8 p-6 bg-amber-100 border border-amber-300 rounded-lg shadow-md text-center">
-                <h2 class="text-xl font-bold text-amber-900 mb-2">Resync Button</h2>
-                <p class="text-amber-800 mb-4">Please don't fuck with this.</p>
+             <!-- Admin/Sync Section -->
+            <!--<section id="admin-section" class="mb-8 p-6 bg-amber-100 border border-amber-300 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-bold text-amber-900 mb-2">Master List Management</h2>
+                <p class="text-amber-800 mb-4">The master artefact list is now managed directly in the HTML file. After updating the file, click the button below to sync the changes to the shared database for all users.</p>
                 <button id="sync-button" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300">
-                    Resync
+                    Sync Master List
                 </button>
                 <p id="sync-status" class="mt-2 text-sm text-gray-600"></p>
             </section>
-            
+
             <!-- Player Selection Section - This will now stick to the top when scrolling -->
             <section id="player-selection-section" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
                 <h2 class="text-xl font-bold text-amber-900 mb-2">Select Your Name to Edit</h2>
@@ -138,8 +138,10 @@
     <!-- After editing, upload the file and click the "Sync Master List" button on the webpage. -->
     <script id="artefact-master-list">
         const masterArtefactList = [
+            { name: "Centurion's dress sword", collections: ["Museum - Training Weapons (tutorial-only)"] },
             { name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
+            { name: "Centurion's seal", collections: ["Mystery: Breaking the Seal"] },
             { name: "Primis Elementis standard", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Legionary gladius", collections: ["Zarosian I", "Museum - Zarosian I"] },
             { name: "Legionary square shield", collections: ["Zarosian I", "Museum - Zarosian I"] },
@@ -154,6 +156,7 @@
             { name: "Imp mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Problem"] },
             { name: "Lesser demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
             { name: "Greater demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
+            { name: "Teleportation crystal", collections: ["Quest: Osseous Rex"] },
             { name: "Order of Dis robes", collections: ["Zamorakian I", "Museum - Zamorakian I"] },
             { name: "Ritual dagger", collections: ["Zamorakian I", "Museum - Zamorakian I", "Magic Man"] },
             { name: "'Frying pan'", collections: ["Saradominist I", "Museum - Saradominist I", "Mystery: Fallen Angels"] },
@@ -164,6 +167,9 @@
             { name: "Legatus pendant", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Toolbelt: Kharid-et access"] },
             { name: "Ceremonial unicorn ornament", collections: ["Saradominist I", "Museum - Saradominist I", "Hat Hoarder", "Unlock Researcher: Eduardo"] },
             { name: "Ceremonial unicorn saddle", collections: ["Saradominist I", "Museum - Saradominist I"] },
+            { name: "Dragonkin device", collections: ["Quest: Desperate Measures"] },
+            { name: "Dragonkin tablet", collections: ["Quest: Desperate Measures"] },
+            { name: "Tetracompass (unpowered)", collections: ["Utility: Find ancient casket"] },
             { name: "Everlight harp", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
             { name: "Everlight trumpet", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
             { name: "Everlight violin", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
@@ -194,7 +200,7 @@
             { name: "Funerary urn of miasma", collections: ["Museum - Zarosian VII", "Urns of the Empire"] },
             { name: "Model chariot", collections: ["Museum - Zarosian VII", "Entertaining the Masses"] },
             { name: "'The Serpent's Fall' carving", collections: ["Museum - Zarosian VII", "Religious Iconography"] },
-            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal", "Relic: Nexus Mod"] },
+            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal"] },
             { name: "Spiked dog collar", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
             { name: "Bronze Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
             { name: "Silver Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
@@ -202,14 +208,16 @@
             { name: "Ikovian gerege", collections: ["Armadylean I", "Museum - Armadylean I", "Knowledge is Power", "Toolbelt: Stormguard access"] },
             { name: "Toy glider", collections: ["Armadylean I", "Museum - Armadylean I"] },
             { name: "Toy war golem", collections: ["Armadylean I", "Museum - Armadylean I"] },
+            { name: "Ceremonial dragonkin device", collections: ["Desperate for Artefacts"] },
             { name: "Decorative vase", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Kantharos cup", collections: ["Saradominist II", "Museum - Saradominist II", "Relic: Heightened Senses"] },
+            { name: "Kantharos cup", collections: ["Saradominist II", "Museum - Saradominist II"] },
             { name: "Patera bowl", collections: ["Saradominist II", "Museum - Saradominist II"] },
             { name: "Castle gatestone", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
             { name: "Engraved ring of kinship", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
             { name: "Ceremonial mace", collections: ["Hitty Fings", "Zarosian II", "Museum - Zarosian II"] },
             { name: "Pontifex Maximus figurine", collections: ["Showy Fings", "Zarosian II", "Museum - Zarosian II"] },
             { name: "'Consensus ad Idem' painting", collections: ["Imperial Impressionism", "Zarosian II", "Museum - Zarosian II"] },
+            { name: "Wingsuit v1", collections: ["Toolbelt: Stormguard traversal"] },
             { name: "Avian song-egg player", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
             { name: "Keshik drum", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
             { name: "Morin khuur", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
@@ -240,7 +248,7 @@
             { name: "Talon-3 razor wing", collections: ["Armadylean II", "Museum - Armadylean II"] },
             { name: "'Exsanguinate' spell scroll", collections: ["Zarosian III", "Museum - Zarosian III", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
             { name: "Necromantic focus", collections: ["Zarosian III", "Museum - Zarosian III", "Knowledge is Power", "Imperial Sorcery"] },
-            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
+            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI", "Toolbelt: Daemonheim access"] },
             { name: "'Friendship bracelet'", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
             { name: "Homely totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
             { name: "High priest crozier", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
@@ -248,7 +256,8 @@
             { name: "High priest orb", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
             { name: "'Torment' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
             { name: "'Pandemonium' tapestry", collections: ["Anarchic Abstraction", "Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
+            { name: "Ceremonial dragonkin tablet", collections: ["Desperate for Artefacts"] },
+            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I", "Crafting: Artificer's measure"] },
             { name: "Ritual bell", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
             { name: "Prototype gravimeter", collections: ["Armadylean II", "Museum - Armadylean II"] },
             { name: "Songbird recorder", collections: ["Armadylean II", "Museum - Armadylean II", "Wise Am the Music Man"] },
@@ -266,8 +275,8 @@
             { name: "Ourg megahitter", collections: ["Red Rum Relics II", "Museum - Bandosian II", "Unlock Researcher: Asgarnia Smith"] },
             { name: "Ourg tower/goblin cower shield", collections: ["Red Rum Relics II", "Museum - Bandosian II"] },
             { name: "Garagorshuun anchor", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
-            { name: "Golem heart", collections: ["Armadylean II", "Museum - Armadylean II", "Relic: Divine Conversion"] },
-            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni", "Relic: Divine Conversion"] },
+            { name: "Golem heart", collections: ["Armadylean II", "Museum - Armadylean II"] },
+            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni"] },
             { name: "Hellfire haladie", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
             { name: "Hellfire katar", collections: ["Zamorakian III", "Museum - Zamorakian III", "Relic: The Rings of Razulei"] },
             { name: "Hellfire zaghnal", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
@@ -279,10 +288,10 @@
             { name: "Kopis dagger", collections: ["Saradominist III", "Museum - Saradominist III"] },
             { name: "Xiphos short sword", collections: ["Saradominist III", "Museum - Saradominist III"] },
             { name: "'Smoke Cloud' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III"] },
+            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III", "Crafting: Artificer's measure"] },
             { name: "Dragon scalpel", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
-            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
-            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
+            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Artificer's measure"] },
+            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Orthen furnace core"] },
             { name: "Orthenglass flask", collections: ["Dragonkin II", "Museum - Dragonkin II", "Relic: Soma"] },
             { name: "Blackfire lance", collections: ["Armadylean III", "Museum - Armadylean III"] },
             { name: "Nightguard shield", collections: ["Armadylean III", "Museum - Armadylean III"] },
@@ -323,10 +332,11 @@
             { name: "Warped trinket", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
             { name: "Praetorian hood", collections: ["Zarosian IV", "Museum - Zarosian IV", "Hat Problem"] },
             { name: "Praetorian robes", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
+            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV", "Crafting: Inquisitor staff"] },
             { name: "Kal-i-kra chieftain crown", collections: ["Red Rum Relics III", "Museum - Bandosian III", "Hat Hoarder"] },
             { name: "Kal-i-kra mace", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
             { name: "Kal-i-kra warhorn", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
+            { name: "Spear of Annihilation", collections: ["Weapon"] },
             { name: "Tsutsaroth helm", collections: ["Zamorakian IV", "Museum - Zamorakian IV", "Hat Hoarder"] },
             { name: "Tsutsaroth pauldron", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
             { name: "Tsutsaroth urumi", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
@@ -368,7 +378,7 @@
         const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
         let artefacts = []; // This will be populated from Firebase
         let chartInstances = {};
-        let selectedArtefactId = null; // Use the document ID for selection
+        let activePlayer = null; // The currently selected player for editing
         let unsubscribe = null; // To store the real-time listener
 
         // --- INITIALIZATION ---
@@ -473,18 +483,17 @@
 
             unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
                 if (snapshot.empty) {
-                     document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4">Database is empty. Please use the "Sync Master List" button to populate it.</td></tr>`;
+                     document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="5" class="text-center py-4">Database is empty. Please use the "Sync Master List" button to populate it.</td></tr>`;
                      return;
                 }
                 artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 artefacts.sort((a, b) => a.sortOrder - b.sortOrder);
                 
                 populateFilters();
-                applyFilters();
-                updatePlayerRequestDisplay();
+                applyFilters(); // This will also call renderTable
             }, (error) => {
                 console.error("Error listening to artefact collection:", error);
-                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
+                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
             });
         }
 
@@ -705,3 +714,4 @@
     </script>
 </body>
 </html>
+
