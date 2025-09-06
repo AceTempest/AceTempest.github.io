@@ -41,13 +41,12 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* --- NEW: CSS for the sticky header --- */
-        #player-requests {
+        /* CSS for the sticky header */
+        #player-selection-section {
             position: -webkit-sticky; /* For Safari compatibility */
             position: sticky;
             top: 0; /* Sticks to the top of the viewport */
             z-index: 10; /* Ensures it stays on top of other content */
-            /* The existing background color from Tailwind will prevent text from showing through */
         }
     </style>
 </head>
@@ -71,16 +70,16 @@
                 <p id="sync-status" class="mt-2 text-sm text-gray-600"></p>
             </section>
             
-            <!-- Player Request Section - This will now stick to the top when scrolling -->
-            <section id="player-requests" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
-                <h2 class="text-xl font-bold text-amber-900 mb-2">Manage Artefact Requests</h2>
-                <p id="request-prompt" class="text-amber-700 mb-4">First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.</p>
+            <!-- Player Selection Section - This will now stick to the top when scrolling -->
+            <section id="player-selection-section" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-bold text-amber-900 mb-2">Select Your Name to Edit</h2>
+                <p id="request-prompt" class="text-amber-700 mb-4">Click your name below to start adding or removing requests in the table.</p>
                 <div id="player-controls" class="flex justify-center items-center gap-4 flex-wrap">
-                    <!-- Player controls will be dynamically inserted here -->
+                    <!-- Player selection buttons will be dynamically inserted here -->
                 </div>
             </section>
 
-<!-- Filtering and Search Section -->
+            <!-- Filtering and Search Section -->
             <section id="filters" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -104,12 +103,13 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3">Artefact Name</th>
                                 <th scope="col" class="px-6 py-3">Collection(s) / Uses</th>
-                                <th scope="col" class="px-6 py-3">Total Requests</th>
-                                <th scope="col" class="px-6 py-3">Requesters</th>
+                                <th scope="col" class="px-6 py-3 text-center">Total Requests</th>
+                                <th scope="col" class="px-6 py-3">All Requesters</th>
+                                <th scope="col" class="px-6 py-3 text-center">Your Requests</th>
                             </tr>
                         </thead>
                         <tbody id="artefact-table-body">
-                           <tr><td colspan="4"><div class="loader"></div><p class="text-center">Loading Artefacts from Database...</p></td></tr>
+                           <tr><td colspan="5"><div class="loader"></div><p class="text-center">Loading Artefacts from Database...</p></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -129,7 +129,7 @@
         </main>
 
         <footer class="text-center mt-12 text-sm text-amber-600">
-            <p>Created for the GIM TCI. All data is based on community-driven sources.</p>
+            <p>Created for the RuneScape community. All data is based on community-driven sources.</p>
         </footer>
     </div>
     
@@ -493,67 +493,58 @@
             const container = document.getElementById('player-controls');
             container.innerHTML = '';
             players.forEach(player => {
-                const controlDiv = document.createElement('div');
-                controlDiv.className = 'flex items-center gap-2 p-2 bg-white rounded-lg border border-amber-200 shadow-sm';
-                controlDiv.innerHTML = `
-                    <span class="font-semibold text-amber-800 w-24 text-left">${player}</span>
-                    <button class="px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600">-</button>
-                    <span id="count-${player}" class="font-bold w-6 text-center">0</span>
-                    <button class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600">+</button>
-                `;
-                controlDiv.querySelector('button:first-of-type').onclick = () => updateRequest(player, -1);
-                controlDiv.querySelector('button:last-of-type').onclick = () => updateRequest(player, 1);
-                container.appendChild(controlDiv);
-            });
-        }
+                const playerButton = document.createElement('button');
+                playerButton.className = 'p-2 rounded-lg border-2 border-amber-300 shadow-sm hover:bg-amber-200 transition';
+                playerButton.textContent = player;
+                
+                playerButton.onclick = () => {
+                    // If clicking the already active player, deactivate them
+                    if (activePlayer === player) {
+                        activePlayer = null;
+                    } else {
+                        activePlayer = player;
+                    }
+                    
+                    // Re-render controls to update styles and re-render table to update controls
+                    renderPlayerControls();
+                    applyFilters(); // Re-render table with new active player
+                };
 
-        function updatePlayerRequestDisplay() {
-            const selectedArtefact = artefacts.find(a => a.id === selectedArtefactId);
-            const prompt = document.getElementById('request-prompt');
-
-            if (selectedArtefact) {
-                prompt.innerHTML = `Requesting: <strong class="text-amber-900">${selectedArtefact.name}</strong>`;
-            } else {
-                prompt.textContent = 'First, click an artefact in the table to select it. Then, use the +/- buttons to adjust request counts for each player.';
-            }
-
-            players.forEach(player => {
-                const countSpan = document.getElementById(`count-${player}`);
-                if (selectedArtefact && selectedArtefact.requestedBy && selectedArtefact.requestedBy[player]) {
-                    countSpan.textContent = selectedArtefact.requestedBy[player];
-                } else {
-                    countSpan.textContent = '0';
+                if (player === activePlayer) {
+                    playerButton.classList.add('bg-amber-300', 'border-amber-500', 'font-bold');
+                    playerButton.classList.remove('border-amber-300');
                 }
+
+                container.appendChild(playerButton);
             });
         }
 
-        async function updateRequest(playerName, change) {
-            if (!selectedArtefactId) {
+        async function updateRequest(artefactId, change) {
+            if (!activePlayer) {
                 const prompt = document.getElementById('request-prompt');
-                prompt.textContent = 'Please select an artefact from the table first!';
-                prompt.classList.add('text-red-500');
+                prompt.textContent = 'Please select your name above before making a request!';
+                prompt.classList.add('text-red-500', 'font-bold');
                 setTimeout(() => {
-                    prompt.classList.remove('text-red-500');
-                    updatePlayerRequestDisplay();
-                }, 2000);
+                    prompt.textContent = 'Click your name below to start adding or removing requests in the table.';
+                    prompt.classList.remove('text-red-500', 'font-bold');
+                }, 2500);
                 return;
             }
 
-            const artefactRef = doc(db, "artefacts", selectedArtefactId);
+            const artefactRef = doc(db, "artefacts", artefactId);
             
             try {
                 const docSnap = await getDoc(artefactRef);
                 if (docSnap.exists()) {
                     const artefact = docSnap.data();
-                    // Create a safe copy of the requests object to modify
                     const currentRequests = { ...(artefact.requestedBy || {}) };
-                    const currentCount = currentRequests[playerName] || 0;
+                    const currentCount = currentRequests[activePlayer] || 0;
                     const newCount = Math.max(0, currentCount + change);
 
                     if (newCount > 0) {
-                        currentRequests[playerName] = newCount;
+                        currentRequests[activePlayer] = newCount;
                     } else {
-                        delete currentRequests[playerName];
+                        delete currentRequests[activePlayer];
                     }
                     await setDoc(artefactRef, { requestedBy: currentRequests }, { merge: true });
                 }
@@ -562,7 +553,7 @@
             }
         }
 
-// --- FILTERING AND RENDERING ---
+        // --- FILTERING AND RENDERING ---
         function populateFilters() {
             const collectionFilter = document.getElementById('collection-filter');
             const currentVal = collectionFilter.value;
@@ -583,12 +574,9 @@
 
             let filteredArtefacts = artefacts.filter(artefact => {
                 const inCollection = collection === 'all' || artefact.collections.includes(collection);
-
-                // Search logic now checks both name and collections
                 const matchesName = artefact.name.toLowerCase().includes(searchTerm);
                 const matchesCollection = artefact.collections.some(c => c.toLowerCase().includes(searchTerm));
                 const matchesSearch = matchesName || matchesCollection;
-
                 return inCollection && matchesSearch;
             });
             
@@ -601,36 +589,61 @@
             tableBody.innerHTML = '';
 
             if (data.length === 0 && artefacts.length > 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
                 return;
             }
 
             data.forEach(artefact => {
-                const row = document.createElement('tr');
-                row.className = `bg-white border-b hover:bg-amber-100 cursor-pointer ${artefact.id === selectedArtefactId ? 'selected-row' : ''}`;
-                row.onclick = () => {
-                    selectedArtefactId = artefact.id;
-                    applyFilters();
-                    updatePlayerRequestDisplay();
-                };
+                const row = tableBody.insertRow();
+                row.className = 'bg-white border-b hover:bg-amber-100';
 
+                // Cells for data
+                row.insertCell().textContent = artefact.name;
+                row.cells[0].className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
+                
+                row.insertCell().textContent = artefact.collections.join(', ');
+                row.cells[1].className = 'px-6 py-4';
+                
                 const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0) : 0;
-                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
-                    .map(([name, count]) => `${name} (x${count})`)
-                    .sort()
-                    .join(', ') : '';
+                row.insertCell().textContent = totalRequests;
+                row.cells[2].className = 'px-6 py-4 font-bold text-center';
 
-                row.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${artefact.name}</td>
-                    <td class="px-6 py-4">${artefact.collections.join(', ')}</td>
-                    <td class="px-6 py-4 font-bold text-center">${totalRequests}</td>
-                    <td class="px-6 py-4">${requestersString || 'None'}</td>
-                `;
-                tableBody.appendChild(row);
+                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
+                    .map(([name, count]) => `${name} (x${count})`).sort().join(', ') : 'None';
+                row.insertCell().textContent = requestersString;
+                row.cells[3].className = 'px-6 py-4';
+
+                // Cell for this user's request controls
+                const cellControls = row.insertCell();
+                cellControls.className = 'px-6 py-4';
+
+                const controlDiv = document.createElement('div');
+                controlDiv.className = 'flex items-center justify-center gap-2';
+
+                const minusButton = document.createElement('button');
+                minusButton.className = 'px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400';
+                minusButton.textContent = '-';
+                minusButton.disabled = !activePlayer;
+                minusButton.onclick = () => updateRequest(artefact.id, -1);
+
+                const countSpan = document.createElement('span');
+                countSpan.className = 'font-bold w-6 text-center';
+                countSpan.textContent = (activePlayer && artefact.requestedBy && artefact.requestedBy[activePlayer]) ? artefact.requestedBy[activePlayer] : '0';
+
+                const plusButton = document.createElement('button');
+                plusButton.className = 'px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400';
+                plusButton.textContent = '+';
+                plusButton.disabled = !activePlayer;
+                plusButton.onclick = () => updateRequest(artefact.id, 1);
+
+                controlDiv.appendChild(minusButton);
+                controlDiv.appendChild(countSpan);
+                controlDiv.appendChild(plusButton);
+                cellControls.appendChild(controlDiv);
             });
         }
         
-         // --- CHART RENDERING ---
+        // --- CHART RENDERING ---
         function renderCharts(data) {
             renderCollectionChart(data);
         }
