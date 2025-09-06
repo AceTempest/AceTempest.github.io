@@ -80,7 +80,7 @@
                 </div>
             </section>
 
-            <!-- Filtering and Search Section -->
+<!-- Filtering and Search Section -->
             <section id="filters" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -90,8 +90,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="artefact-search" class="block text-sm font-medium text-amber-800 mb-1">Search by Name</label>
-                        <input type="text" id="artefact-search" placeholder="Enter artefact name..." class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
+                        <label for="artefact-search" class="block text-sm font-medium text-amber-800 mb-1">Search by Name or Collection</label>
+                        <input type="text" id="artefact-search" placeholder="Search by name or collection..." class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
                     </div>
                 </div>
             </section>
@@ -562,7 +562,7 @@
             }
         }
 
-        // --- FILTERING AND RENDERING ---
+// --- FILTERING AND RENDERING ---
         function populateFilters() {
             const collectionFilter = document.getElementById('collection-filter');
             const currentVal = collectionFilter.value;
@@ -583,7 +583,12 @@
 
             let filteredArtefacts = artefacts.filter(artefact => {
                 const inCollection = collection === 'all' || artefact.collections.includes(collection);
-                const matchesSearch = artefact.name.toLowerCase().includes(searchTerm);
+
+                // Search logic now checks both name and collections
+                const matchesName = artefact.name.toLowerCase().includes(searchTerm);
+                const matchesCollection = artefact.collections.some(c => c.toLowerCase().includes(searchTerm));
+                const matchesSearch = matchesName || matchesCollection;
+
                 return inCollection && matchesSearch;
             });
             
