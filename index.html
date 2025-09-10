@@ -361,7 +361,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs, query, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
         const firebaseConfig = {
@@ -546,16 +546,24 @@
                 const docSnap = await getDoc(artefactRef);
                 if (docSnap.exists()) {
                     const artefact = docSnap.data();
-                    const currentRequests = { ...(artefact.requestedBy || {}) };
+                    const currentRequests = artefact.requestedBy || {};
                     const currentCount = currentRequests[activePlayer] || 0;
                     const newCount = Math.max(0, currentCount + change);
 
+                    // Use dot notation to update a specific field in the map
+                    const fieldPath = `requestedBy.${activePlayer}`;
+
                     if (newCount > 0) {
-                        currentRequests[activePlayer] = newCount;
+                        // If the new count is positive, update the value.
+                        await updateDoc(artefactRef, {
+                            [fieldPath]: newCount
+                        });
                     } else {
-                        delete currentRequests[activePlayer];
+                        // If the new count is 0, remove the field from the map.
+                        await updateDoc(artefactRef, {
+                            [fieldPath]: deleteField()
+                        });
                     }
-                    await setDoc(artefactRef, { requestedBy: currentRequests }, { merge: true });
                 }
             } catch (error) {
                 console.error("Error updating request:", error);
@@ -714,4 +722,3 @@
     </script>
 </body>
 </html>
-
