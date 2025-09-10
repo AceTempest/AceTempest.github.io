@@ -601,7 +601,7 @@
             'Warforged bronze': 'Bandosian', 'Compass rose': 'Dragonkin', 'Carbon black': 'Dragonkin', 
             'Felt': 'Dragonkin', 'Fossilised bone': 'Agnostic', 'Yu\'biusk clay': 'Bandosian', 
             'Aetherium alloy': 'Armadylean', 'Quintessence': 'Armadylean',
-            // Adding misc items that might not have a faction but should be listed
+            // Corrected and updated Misc category
             'Ruby': 'Misc', 'White candle': 'Misc', 'Dragonstone': 'Misc', 'Bronze bar': 'Misc', 'Silver bar': 'Misc',
             'Clockwork': 'Misc', 'Sapphire': 'Misc', 'Diamond': 'Misc', 'Phoenix feather': 'Misc', 'Weapon poison (3)': 'Misc',
             'Rope': 'Misc', 'Black mushroom ink': 'Misc', 'Emerald': 'Misc', 'Molten glass': 'Misc', 'Death rune': 'Misc'
@@ -887,28 +887,53 @@
                 const totalCount = Object.values(requests).reduce((sum, count) => sum + count, 0);
                 if (totalCount === 0) return;
                 const materials = materialCosts[artefact.name];
-                if (!materials) return;
-                for (const material in materials) {
-                    const quantity = materials[material];
-                    totalMaterials[material] = (totalMaterials[material] || 0) + (quantity * totalCount);
+                if (materials) {
+                    for (const material in materials) {
+                        totalMaterials[material] = (totalMaterials[material] || 0) + (materials[material] * totalCount);
+                    }
                 }
             });
 
             const container = document.getElementById('material-list');
             container.innerHTML = ''; 
-            const sortedMaterials = Object.keys(totalMaterials).sort();
-            if (sortedMaterials.length === 0) {
-                container.innerHTML = '<p class="col-span-full text-center text-gray-500">Request an artefact to see the required materials here.</p>';
+
+            if (Object.keys(totalMaterials).length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500">Request an artefact to see the required materials here.</p>';
                 return;
             }
-            sortedMaterials.forEach(material => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'bg-amber-50 p-3 rounded-lg text-center shadow-sm';
-                itemDiv.innerHTML = `
-                    <p class="font-bold text-amber-900 text-lg">${totalMaterials[material]}</p>
-                    <p class="text-sm text-amber-700">${material}</p>
-                `;
-                container.appendChild(itemDiv);
+
+            const materialsByFaction = {};
+            for (const material in totalMaterials) {
+                const faction = materialFactions[material] || 'Misc';
+                if (!materialsByFaction[faction]) materialsByFaction[faction] = [];
+                materialsByFaction[faction].push({ name: material, count: totalMaterials[material] });
+            }
+
+            const sortedFactions = Object.keys(materialsByFaction).sort((a, b) => {
+                if (a === 'Misc') return 1;
+                if (b === 'Misc') return -1;
+                return a.localeCompare(b);
+            });
+
+            sortedFactions.forEach(faction => {
+                const factionHeader = document.createElement('h3');
+                factionHeader.className = 'text-lg font-semibold text-amber-800 mt-4 mb-2 border-b border-amber-200 pb-1';
+                factionHeader.textContent = faction;
+                container.appendChild(factionHeader);
+
+                const factionGrid = document.createElement('div');
+                factionGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+                
+                materialsByFaction[faction].sort((a, b) => a.name.localeCompare(b.name)).forEach(mat => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'bg-amber-50 p-3 rounded-lg text-center shadow-sm';
+                    itemDiv.innerHTML = `
+                        <p class="font-bold text-amber-900 text-lg">${mat.count}</p>
+                        <p class="text-sm text-amber-700">${mat.name}</p>
+                    `;
+                    factionGrid.appendChild(itemDiv);
+                });
+                container.appendChild(factionGrid);
             });
         }
 
@@ -936,9 +961,7 @@
                     const materialsByFaction = {};
                     for (const material in playerMaterials) {
                         const faction = materialFactions[material] || 'Misc';
-                        if (!materialsByFaction[faction]) {
-                            materialsByFaction[faction] = [];
-                        }
+                        if (!materialsByFaction[faction]) materialsByFaction[faction] = [];
                         materialsByFaction[faction].push({ name: material, count: playerMaterials[material] });
                     }
 
@@ -946,7 +969,13 @@
                     playerCard.className = 'bg-amber-50 p-4 rounded-lg shadow-md';
                     let cardHtml = `<h3 class="text-xl font-bold text-amber-900 mb-3 text-center border-b-2 border-amber-200 pb-2">${player}</h3>`;
                     
-                    Object.keys(materialsByFaction).sort().forEach(faction => {
+                    const sortedFactions = Object.keys(materialsByFaction).sort((a, b) => {
+                        if (a === 'Misc') return 1;
+                        if (b === 'Misc') return -1;
+                        return a.localeCompare(b);
+                    });
+
+                    sortedFactions.forEach(faction => {
                         cardHtml += `<h4 class="text-md font-semibold text-amber-800 mt-3 mb-1">${faction}</h4><ul class="list-disc list-inside text-sm text-gray-700">`;
                         materialsByFaction[faction].sort((a,b) => a.name.localeCompare(b.name)).forEach(mat => {
                            cardHtml += `<li><strong>${mat.count}</strong> ${mat.name}</li>`;
