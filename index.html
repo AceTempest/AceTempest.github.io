@@ -125,6 +125,16 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- Per-Person Material Section -->
+            <section id="per-person-materials" class="mt-8">
+                 <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+                    <h2 class="text-2xl font-bold text-amber-900 mb-4 text-center">Per-Person Material Breakdown</h2>
+                    <div id="per-person-material-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Per-person lists will be generated here -->
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer class="text-center mt-12 text-sm text-amber-600">
@@ -357,8 +367,7 @@
     </script>
     
     <script type="module">
-        // --- ARTEFACT MATERIAL DATA ---
-        // Data manually transcribed from the provided PDF
+        // --- DATA STRUCTURES ---
         const materialCosts = {
             "Centurion's dress sword": { "Imperial iron": 5, "Purpleheart wood": 5 },
             "Venator dagger": { "Third Age iron": 16, "Zarosian insignia": 12 },
@@ -577,6 +586,27 @@
             "Gold dish": { "Goldrune": 86, "Dragon metal": 54 },
             "'Raksha' idol": { "Orgone": 56, "Dragon metal": 44, "Goldrune": 40 },
         };
+        const materialFactions = {
+            'Imperial iron': 'Zarosian', 'Purpleheart wood': 'Zarosian', 'Third Age iron': 'Agnostic', 
+            'Zarosian insignia': 'Zarosian', 'Samite silk': 'Agnostic', 'Imperial steel': 'Zarosian', 
+            'White oak': 'Agnostic', 'Goldrune': 'Agnostic', 'Orthenglass': 'Agnostic', 'Vellum': 'Agnostic', 
+            'Cadmium red': 'Zamorakian', 'Ancient vis': 'Zarosian', 'Tyrian purple': 'Zarosian', 
+            'Leather scraps': 'Agnostic', 'Chaotic brimstone': 'Zamorakian', 'Demonhide': 'Zamorakian', 
+            'Eye of Dagon': 'Zamorakian', 'Hellfire metal': 'Zamorakian', 'Keramos': 'Saradominist', 
+            'White marble': 'Saradominist', 'Cobalt blue': 'Saradominist', 'Everlight silvthril': 'Saradominist', 
+            'Star of Saradomin': 'Saradominist', 'Blood of Orcus': 'Zarosian', 'Soapstone': 'Agnostic', 
+            'Stormguard steel': 'Armadylean', 'Wings of War': 'Armadylean', 'Dragon metal': 'Dragonkin', 
+            'Orgone': 'Dragonkin', 'Animal furs': 'Agnostic', 'Armadylean yellow': 'Armadylean', 
+            'Malachite green': 'Bandosian', 'Mark of the Kyzaj': 'Bandosian', 'Vulcanised rubber': 'Bandosian', 
+            'Warforged bronze': 'Bandosian', 'Compass rose': 'Dragonkin', 'Carbon black': 'Dragonkin', 
+            'Felt': 'Dragonkin', 'Fossilised bone': 'Agnostic', 'Yu\'biusk clay': 'Bandosian', 
+            'Aetherium alloy': 'Armadylean', 'Quintessence': 'Armadylean',
+            // Adding misc items that might not have a faction but should be listed
+            'Ruby': 'Misc', 'White candle': 'Misc', 'Dragonstone': 'Misc', 'Bronze bar': 'Misc', 'Silver bar': 'Misc',
+            'Clockwork': 'Misc', 'Sapphire': 'Misc', 'Diamond': 'Misc', 'Phoenix feather': 'Misc', 'Weapon poison (3)': 'Misc',
+            'Rope': 'Misc', 'Black mushroom ink': 'Misc', 'Emerald': 'Misc', 'Molten glass': 'Misc', 'Death rune': 'Misc'
+        };
+
         
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -708,8 +738,10 @@
                 artefacts.sort((a, b) => a.sortOrder - b.sortOrder);
                 
                 populateFilters();
-                applyFilters(); // This will also call renderTable and the material calculator
-                calculateAndRenderMaterials(); // Initial calculation
+                applyFilters();
+                // Call material calculators whenever the data changes
+                calculateAndRenderTotalMaterials();
+                calculateAndRenderPerPersonMaterials();
             }, (error) => {
                 console.error("Error listening to artefact collection:", error);
                 document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
@@ -726,16 +758,9 @@
                 playerButton.textContent = player;
                 
                 playerButton.onclick = () => {
-                    // If clicking the already active player, deactivate them
-                    if (activePlayer === player) {
-                        activePlayer = null;
-                    } else {
-                        activePlayer = player;
-                    }
-                    
-                    // Re-render controls to update styles and re-render table to update controls
+                    activePlayer = (activePlayer === player) ? null : player;
                     renderPlayerControls();
-                    applyFilters(); // Re-render table with new active player
+                    applyFilters();
                 };
 
                 if (player === activePlayer) {
@@ -768,9 +793,7 @@
                     const currentRequests = artefact.requestedBy || {};
                     const currentCount = currentRequests[activePlayer] || 0;
                     const newCount = Math.max(0, currentCount + change);
-
                     const fieldPath = `requestedBy.${activePlayer}`;
-
                     if (newCount > 0) {
                         await updateDoc(artefactRef, { [fieldPath]: newCount });
                     } else {
@@ -808,63 +831,46 @@
                 const matchesSearch = matchesName || matchesCollection;
                 return inCollection && matchesSearch;
             });
-            
             renderTable(filteredArtefacts);
-            calculateAndRenderMaterials(); // Update materials based on ALL requests
         }
 
         function renderTable(data) {
             const tableBody = document.getElementById('artefact-table-body');
             tableBody.innerHTML = '';
-
             if (data.length === 0 && artefacts.length > 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
                 return;
             }
-
             data.forEach(artefact => {
                 const row = tableBody.insertRow();
                 row.className = 'bg-white border-b hover:bg-amber-100';
-
-                // Cells for data
                 row.insertCell().textContent = artefact.name;
                 row.cells[0].className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
-                
                 row.insertCell().textContent = artefact.collections.join(', ');
                 row.cells[1].className = 'px-6 py-4';
-                
-                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((sum, count) => sum + count, 0) : 0;
+                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((s, c) => s + c, 0) : 0;
                 row.insertCell().textContent = totalRequests;
                 row.cells[2].className = 'px-6 py-4 font-bold text-center';
-
-                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy)
-                    .map(([name, count]) => `${name} (x${count})`).sort().join(', ') : 'None';
+                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy).map(([n, c]) => `${n} (x${c})`).sort().join(', ') : 'None';
                 row.insertCell().textContent = requestersString;
                 row.cells[3].className = 'px-6 py-4';
-
-                // Cell for this user's request controls
                 const cellControls = row.insertCell();
                 cellControls.className = 'px-6 py-4';
-
                 const controlDiv = document.createElement('div');
                 controlDiv.className = 'flex items-center justify-center gap-2';
-
                 const minusButton = document.createElement('button');
                 minusButton.className = 'px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400';
                 minusButton.textContent = '-';
                 minusButton.disabled = !activePlayer;
                 minusButton.onclick = () => updateRequest(artefact.id, -1);
-
                 const countSpan = document.createElement('span');
                 countSpan.className = 'font-bold w-6 text-center';
                 countSpan.textContent = (activePlayer && artefact.requestedBy && artefact.requestedBy[activePlayer]) ? artefact.requestedBy[activePlayer] : '0';
-
                 const plusButton = document.createElement('button');
                 plusButton.className = 'px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400';
                 plusButton.textContent = '+';
                 plusButton.disabled = !activePlayer;
                 plusButton.onclick = () => updateRequest(artefact.id, 1);
-
                 controlDiv.appendChild(minusButton);
                 controlDiv.appendChild(countSpan);
                 controlDiv.appendChild(plusButton);
@@ -873,36 +879,28 @@
         }
         
         // --- MATERIAL CALCULATION ---
-        function calculateAndRenderMaterials() {
+        function calculateAndRenderTotalMaterials() {
             const totalMaterials = {};
-
-            // Aggregate materials from ALL artefacts, not just filtered ones
             artefacts.forEach(artefact => {
                 const requests = artefact.requestedBy;
                 if (!requests) return;
-
                 const totalCount = Object.values(requests).reduce((sum, count) => sum + count, 0);
                 if (totalCount === 0) return;
-
                 const materials = materialCosts[artefact.name];
                 if (!materials) return;
-
                 for (const material in materials) {
                     const quantity = materials[material];
                     totalMaterials[material] = (totalMaterials[material] || 0) + (quantity * totalCount);
                 }
             });
 
-            const materialListContainer = document.getElementById('material-list');
-            materialListContainer.innerHTML = ''; // Clear previous list
-
+            const container = document.getElementById('material-list');
+            container.innerHTML = ''; 
             const sortedMaterials = Object.keys(totalMaterials).sort();
-
             if (sortedMaterials.length === 0) {
-                materialListContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Request an artefact to see the required materials here.</p>';
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500">Request an artefact to see the required materials here.</p>';
                 return;
             }
-
             sortedMaterials.forEach(material => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bg-amber-50 p-3 rounded-lg text-center shadow-sm';
@@ -910,8 +908,59 @@
                     <p class="font-bold text-amber-900 text-lg">${totalMaterials[material]}</p>
                     <p class="text-sm text-amber-700">${material}</p>
                 `;
-                materialListContainer.appendChild(itemDiv);
+                container.appendChild(itemDiv);
             });
+        }
+
+        function calculateAndRenderPerPersonMaterials() {
+            const container = document.getElementById('per-person-material-list');
+            container.innerHTML = '';
+            let hasAnyRequests = false;
+
+            players.forEach(player => {
+                const playerMaterials = {};
+                artefacts.forEach(artefact => {
+                    const count = artefact.requestedBy ? (artefact.requestedBy[player] || 0) : 0;
+                    if (count > 0) {
+                        hasAnyRequests = true;
+                        const materials = materialCosts[artefact.name];
+                        if (materials) {
+                            for (const material in materials) {
+                                playerMaterials[material] = (playerMaterials[material] || 0) + (materials[material] * count);
+                            }
+                        }
+                    }
+                });
+
+                if (Object.keys(playerMaterials).length > 0) {
+                    const materialsByFaction = {};
+                    for (const material in playerMaterials) {
+                        const faction = materialFactions[material] || 'Misc';
+                        if (!materialsByFaction[faction]) {
+                            materialsByFaction[faction] = [];
+                        }
+                        materialsByFaction[faction].push({ name: material, count: playerMaterials[material] });
+                    }
+
+                    const playerCard = document.createElement('div');
+                    playerCard.className = 'bg-amber-50 p-4 rounded-lg shadow-md';
+                    let cardHtml = `<h3 class="text-xl font-bold text-amber-900 mb-3 text-center border-b-2 border-amber-200 pb-2">${player}</h3>`;
+                    
+                    Object.keys(materialsByFaction).sort().forEach(faction => {
+                        cardHtml += `<h4 class="text-md font-semibold text-amber-800 mt-3 mb-1">${faction}</h4><ul class="list-disc list-inside text-sm text-gray-700">`;
+                        materialsByFaction[faction].sort((a,b) => a.name.localeCompare(b.name)).forEach(mat => {
+                           cardHtml += `<li><strong>${mat.count}</strong> ${mat.name}</li>`;
+                        });
+                        cardHtml += `</ul>`;
+                    });
+                    playerCard.innerHTML = cardHtml;
+                    container.appendChild(playerCard);
+                }
+            });
+
+            if (!hasAnyRequests) {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500">No requests have been made by anyone yet.</p>';
+            }
         }
     </script>
 </body>
