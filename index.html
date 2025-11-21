@@ -1,33 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TCI Artifacts</title>
     <link rel="icon" type="image/png" href="https://runescape.wiki/images/Archaeology-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* THEME TOKENS */
+        :root {
+            --bg: #f6f0de;
+            --panel-bg: #ffffff;
+            --panel-muted: #fff9ec;
+            --panel-border: #e5c06b;
+            --text-primary: #4c2c1a;
+            --text-subtle: #7a5a3b;
+            --accent-strong: #b45309;
+            --collection-bg: #fff9ec;
+            --collection-border: #e5c06b;
+            --collection-text: #4c2c1a;
+        }
+
+        :root[data-theme="daemonheim"] {
+            --bg: #0d0d0f;
+            --panel-bg: #1b1b1f;
+            --panel-muted: #242429;
+            --panel-border: #ff8c32;
+            --text-primary: #f5f5f5;
+            --text-subtle: #dcdcdc;
+            --accent-strong: #ff8c32;
+            --collection-bg: #1b1b1f;
+            --collection-border: #ff8c32;
+            --collection-text: #f5f5f5;
+        }
+
+        :root[data-theme="everlight"] {
+            --bg: #f7f9fb;
+            --panel-bg: #ffffff;
+            --panel-muted: #eaf0ff;
+            --panel-border: #e5b700;
+            --text-primary: #0d2347;
+            --text-subtle: #365c9c;
+            --accent-strong: #e5b700;
+            --collection-bg: #0d2347;
+            --collection-border: #e5b700;
+            --collection-text: #3f3f3f;
+        }
+
+        :root[data-theme="warforge"] {
+            --bg: #1a120d;
+            --panel-bg: #22160f;
+            --panel-muted: #2b1c13;
+            --panel-border: #2fa56a;
+            --text-primary: #91775f;
+            --text-subtle: #524437;
+            --accent-strong: #2fa56a;
+            --collection-bg: #22160f;
+            --collection-border: #2fa56a;
+            --collection-text: #85694f;
+        }
+
+        :root[data-theme="orthen"] {
+            --bg: #120b16;
+            --panel-bg: #241e2b;
+            --panel-muted: #2d2634;
+            --panel-border: #9b5cff;
+            --text-primary: #59575c;
+            --text-subtle: #4e4b52;
+            --accent-strong: #38d0b9;
+            --collection-bg: #241e2b;
+            --collection-border: #9b5cff;
+            --collection-text: #ede8f6;
+        }
+
+        :root[data-theme="stormguard"] {
+            --bg: #f5fbff;
+            --panel-bg: #ffffff;
+            --panel-muted: #eef7ff;
+            --panel-border: #d2e4f2;
+            --text-primary: #3c4a5a;
+            --text-subtle: #5a6d82;
+            --accent-strong: #d2a427;
+            --collection-bg: #eef7ff;
+            --collection-border: #d2a427;
+            --collection-text: #3c4a5a;
+        }
+
+        :root[data-theme="infernal"] {
+            --bg: #0c0506;
+            --panel-bg: #1a0f10;
+            --panel-muted: #241515;
+            --panel-border: #ff4d1c;
+            --text-primary: #8f8383;
+            --text-subtle: #8b6969;
+            --accent-strong: #c1121f;
+            --collection-bg: #1a0f10;
+            --collection-border: #ff4d1c;
+            --collection-text: #f6e6e6;
+        }
+
+        :root[data-theme="kharid-et"] {
+            --bg: #0f0a1a;
+            --panel-bg: #1b1326;
+            --panel-muted: #241733;
+            --panel-border: #c8a14a;
+            --text-primary: #7b5c80;
+            --text-subtle: #866d92;
+            --accent-strong: #c8a14a;
+            --collection-bg: #1b1326;
+            --collection-border: #c8a14a;
+            --collection-text: #e7dfe8;
+        }
+
         body {
-            background-color: #FDF6E3; /* A warm, parchment-like background */
+            background-color: var(--bg);
+            color: var(--text-primary);
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
+
+        .themed-panel {
+            background-color: var(--panel-bg) !important;
+            border-color: var(--panel-border) !important;
+            color: var(--text-primary);
         }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
+
+        .themed-collection {
+            background-color: var(--collection-bg) !important;
+            border-color: var(--collection-border) !important;
+            color: var(--collection-text);
         }
-        .selected-row {
-            background-color: #FEF3C7; /* A light amber for selected rows */
+
+        /* Readability helpers for darker themes */
+        :root[data-theme="daemonheim"] .bg-white,
+        :root[data-theme="everlight"] .bg-white {
+            background-color: var(--panel-bg) !important;
         }
+
+        :root[data-theme="daemonheim"] .bg-amber-50,
+        :root[data-theme="everlight"] .bg-amber-50,
+        :root[data-theme="daemonheim"] .bg-amber-100,
+        :root[data-theme="everlight"] .bg-amber-100 {
+            background-color: var(--panel-muted) !important;
+        }
+
+        :root[data-theme="daemonheim"] .text-amber-900,
+        :root[data-theme="daemonheim"] .text-amber-800,
+        :root[data-theme="daemonheim"] .text-amber-700,
+        :root[data-theme="everlight"] .text-amber-900,
+        :root[data-theme="everlight"] .text-amber-800,
+        :root[data-theme="everlight"] .text-amber-700 {
+            color: var(--text-primary) !important;
+        }
+
+        :root[data-theme="daemonheim"] .text-gray-500,
+        :root[data-theme="daemonheim"] .text-gray-600,
+        :root[data-theme="everlight"] .text-gray-500,
+        :root[data-theme="everlight"] .text-gray-600 {
+            color: var(--text-subtle) !important;
+        }
+
+        /* Custom Scrollbar for the Collections View */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2c1a0b;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #78350f;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #92400e;
+        }
+
         /* Simple loading spinner */
         .loader {
             border: 4px solid #f3f3f3;
@@ -38,20 +187,100 @@
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         /* CSS for the sticky header */
         #player-selection-section {
-            position: -webkit-sticky; /* For Safari compatibility */
+            position: -webkit-sticky;
+            /* For Safari compatibility */
             position: sticky;
-            top: 0; /* Sticks to the top of the viewport */
-            z-index: 10; /* Ensures it stays on top of other content */
+            top: 0;
+            /* Sticks to the top of the viewport */
+            z-index: 30;
+            /* Ensures it stays on top of other content */
+        }
+
+        /* Collections view theming */
+        #collections-view-section {
+            background-color: var(--collection-bg);
+            border-color: var(--collection-border);
+            color: var(--collection-text);
+        }
+
+        #collections-view-section .sidebar-panel {
+            background-color: var(--panel-bg);
+            border-color: var(--collection-border);
+            color: var(--collection-text);
+        }
+
+        #collections-view-section .content-panel {
+            background-color: var(--panel-muted);
+            border-color: var(--collection-border);
+            color: var(--collection-text);
+        }
+
+        #collection-sidebar-list button {
+            color: var(--collection-text);
+            border-color: var(--collection-border);
+            background-color: transparent;
+        }
+
+        #collection-sidebar-list button:hover {
+            background-color: var(--panel-muted);
+        }
+
+        #collection-sidebar-list button.active-collection {
+            background-color: var(--panel-muted);
+            color: var(--text-primary);
+            border-left: 4px solid var(--collection-border);
+        }
+
+        #collection-view-title,
+        #collection-progress {
+            color: var(--collection-text);
+        }
+
+        .collection-card {
+            background-color: var(--panel-bg);
+            border-color: var(--collection-border) !important;
+            color: var(--text-primary);
+        }
+
+        /* Table readability per theme */
+        #artefact-table-section table {
+            color: var(--text-primary);
+        }
+
+        #artefact-table-section thead {
+            background-color: var(--panel-muted);
+            color: var(--text-primary);
+        }
+
+        #artefact-table-section tbody tr {
+            background-color: var(--panel-bg);
+            border-color: var(--panel-border);
+        }
+
+        #artefact-table-section tbody tr:nth-child(even) {
+            background-color: var(--panel-muted);
+        }
+
+        #artefact-table-section tbody tr:hover {
+            background-color: var(--panel-muted);
         }
     </style>
 </head>
-<body class="font-sans text-gray-800">
+
+<body class="font-sans text-gray-100">
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
@@ -59,79 +288,142 @@
             <p class="text-lg text-amber-700 mt-2">Request artefacts easily utilizing this tool.</p>
         </header>
 
-        <main>
-             <!-- Admin/Sync Section -->
-            <!--<section id="admin-section" class="mb-8 p-6 bg-amber-100 border border-amber-300 rounded-lg shadow-md text-center">
-                <h2 class="text-xl font-bold text-amber-900 mb-2">Master List Management</h2>
-                <p class="text-amber-800 mb-4">The master artefact list is now managed directly in the HTML file. After updating the file, click the button below to sync the changes to the shared database for all users.</p>
-                <button id="sync-button" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded shadow-lg transition duration-300">
-                    Sync Master List
-                </button>
-                <p id="sync-status" class="mt-2 text-sm text-gray-600"></p>
-            </section>
-
-            <!-- Player Selection Section - This will now stick to the top when scrolling -->
-            <section id="player-selection-section" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md text-center">
+        <main class="space-y-6">
+            <section id="player-selection-section"
+                class="p-6 rounded-lg shadow-md text-center border-b-4 border-amber-200 sticky top-0 z-30 themed-panel">
                 <h2 class="text-xl font-bold text-amber-900 mb-2">Select Your Name to Edit</h2>
-                <p id="request-prompt" class="text-amber-700 mb-4">Click your name below to start adding or removing requests in the table.</p>
+                <p id="request-prompt" class="text-amber-700 mb-4">Click your name below to start adding or removing
+                    requests.</p>
                 <div id="player-controls" class="flex justify-center items-center gap-4 flex-wrap">
-                    <!-- Player selection buttons will be dynamically inserted here -->
                 </div>
             </section>
 
-            <!-- Filtering and Search Section -->
-            <section id="filters" class="mb-8 p-6 bg-amber-50 rounded-lg shadow-md">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="collection-filter" class="block text-sm font-medium text-amber-800 mb-1">Filter by Collection / Use</label>
-                        <select id="collection-filter" class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
+            <section id="control-panel"
+                class="p-4 rounded-lg shadow-md flex flex-col gap-4 md:flex-row md:items-center md:justify-between z-20 themed-panel">
+                <div class="flex bg-amber-500 rounded-lg p-1">
+                    <button id="view-table-btn"
+                        class="px-4 py-2 rounded-md font-bold text-amber-900 bg-white shadow-sm transition"
+                        onclick="switchView('table')">
+                        List View
+                    </button>
+                    <button id="view-collection-btn"
+                        class="px-4 py-2 rounded-md font-bold text-amber-800 hover:bg-white/50 transition"
+                        onclick="switchView('collection')">
+                        Collections View
+                    </button>
+                    <button id="view-fulfillment-btn"
+                        class="px-4 py-2 rounded-md font-bold text-amber-800 hover:bg-white/50 transition"
+                        onclick="switchView('fulfillment')">
+                        Fulfillment
+                    </button>
+                </div>
+                <div class="w-full md:w-2/3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label for="collection-filter" class="text-sm font-medium text-amber-800">Filter by Collection /
+                            Use</label>
+                        <select id="collection-filter"
+                            class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
                             <option value="all">All Collections</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="artefact-search" class="block text-sm font-medium text-amber-800 mb-1">Search by Name or Collection</label>
-                        <input type="text" id="artefact-search" placeholder="Search by name or collection..." class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
+                    <div class="flex flex-col gap-1">
+                        <label for="artefact-search" class="text-sm font-medium text-amber-800">Search by Name or
+                            Collection</label>
+                        <input type="text" id="artefact-search" placeholder="Search artefacts..."
+                            class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label for="theme-select" class="text-sm font-medium text-amber-800">Theme</label>
+                        <select id="theme-select"
+                            class="w-full p-2 border border-amber-300 rounded-md bg-white focus:ring-amber-500 focus:border-amber-500">
+                            <option value="parchment">Parchment (default)</option>
+                            <option value="daemonheim">Daemonheim</option>
+                            <option value="everlight">Everlight</option>
+                            <option value="warforge">Warforge</option>
+                            <option value="orthen">Orthen</option>
+                            <option value="stormguard">Stormguard</option>
+                            <option value="infernal">Infernal Source</option>
+                            <option value="kharid-et">Kharid-Et</option>
+                        </select>
                     </div>
                 </div>
             </section>
 
-            <!-- Artefacts Table Section -->
-            <section id="artefact-table-section" class="bg-white p-6 rounded-lg shadow-lg">
-                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-amber-800 uppercase bg-amber-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Artefact Name</th>
-                                <th scope="col" class="px-6 py-3">Collection(s) / Uses</th>
-                                <th scope="col" class="px-6 py-3 text-center">Total Requests</th>
-                                <th scope="col" class="px-6 py-3">All Requesters</th>
-                                <th scope="col" class="px-6 py-3 text-center">Your Requests</th>
-                            </tr>
-                        </thead>
-                        <tbody id="artefact-table-body">
-                           <tr><td colspan="5"><div class="loader"></div><p class="text-center">Loading Artefacts from Database...</p></td></tr>
-                        </tbody>
-                    </table>
+            <div id="table-view-container">
+                <section id="artefact-table-section" class="p-6 rounded-lg shadow-lg themed-panel">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-amber-800 uppercase bg-amber-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Artefact</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Total</th>
+                                    <th scope="col" class="px-6 py-3">Requesters</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Adjust</th>
+                                </tr>
+                            </thead>
+                            <tbody id="artefact-table-body">
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="loader"></div>
+                                        <p class="text-center">Loading Artefacts...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="collections-view-section" class="hidden p-4 rounded-lg shadow-xl border-4 themed-collection">
+                <div class="flex flex-col md:flex-row gap-4 h-[600px]">
+                    <div
+                        class="w-full md:w-1/3 lg:w-1/4 rounded border-2 overflow-y-auto custom-scrollbar themed-panel sidebar-panel">
+                        <div id="collection-sidebar-list" class="flex flex-col">
+                        </div>
+                    </div>
+                    <div class="flex-1 rounded border-2 p-4 flex flex-col content-panel">
+                        <header class="flex justify-between items-end border-b pb-2 mb-4"
+                            style="border-color: var(--collection-border);">
+                            <h2 id="collection-view-title" class="text-2xl font-bold">Select a Collection
+                            </h2>
+                            <span id="collection-progress" class="text-sm">0/0 Requested</span>
+                        </header>
+                        <div id="collection-grid"
+                            class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 overflow-y-auto p-2 custom-scrollbar">
+                        </div>
+                    </div>
                 </div>
-            </section>
-            
-            <!-- Material Calculator Section -->
-            <section id="material-calculator" class="mt-8">
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+            </div>
+
+            <div id="fulfillment-view-section"
+                class="hidden p-6 rounded-lg shadow-lg border-2 themed-panel" style="border-color: var(--panel-border);">
+                <header class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Fulfillment Center</h2>
+                        <p class="text-sm" style="color: var(--text-subtle);">See outstanding requests (sorted by level/order) and mark
+                            them as fulfilled.</p>
+                    </div>
+                </header>
+                <div id="fulfillment-empty" class="text-center py-8" style="color: var(--text-subtle);">
+                    No outstanding requests. Great job!
+                </div>
+                <div id="fulfillment-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+            </div>
+
+            <section id="material-calculator" class="mt-2">
+                <div class="p-6 rounded-lg shadow-lg w-full themed-panel">
                     <h2 class="text-2xl font-bold text-amber-900 mb-4 text-center">Total Materials Required</h2>
                     <div id="material-list">
-                        <!-- Total material list will be generated here -->
                         <p class="text-center text-gray-500">Request artefacts to see required materials.</p>
                     </div>
                 </div>
             </section>
-            
-            <!-- Per-Person Material Section -->
-            <section id="per-person-materials" class="mt-8">
-                 <div class="bg-white p-6 rounded-lg shadow-lg w-full">
+
+            <section id="per-person-materials" class="mt-2">
+                <div class="p-6 rounded-lg shadow-lg w-full themed-panel">
                     <h2 class="text-2xl font-bold text-amber-900 mb-4 text-center">Per-Person Material Breakdown</h2>
                     <div id="per-person-material-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Per-person lists will be generated here -->
                     </div>
                 </div>
             </section>
@@ -141,231 +433,7 @@
             <p>Created for the RuneScape community. All data is based on community-driven sources.</p>
         </footer>
     </div>
-    
-    <!-- This script tag contains the master list of artefacts. -->
-    <!-- EDIT THIS LIST to add, remove, or change artefacts. -->
-    <!-- After editing, upload the file and click the "Sync Master List" button on the webpage. -->
-    <script id="artefact-master-list">
-        const masterArtefactList = [
-            { name: "Centurion's dress sword", collections: ["Museum - Training Weapons (tutorial-only)"] },
-            { name: "Venator dagger", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Venator light crossbow", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Centurion's seal", collections: ["Mystery: Breaking the Seal"] },
-            { name: "Primis Elementis standard", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Legionary gladius", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Legionary square shield", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Zaros effigy", collections: ["Zarosian I", "Museum - Zarosian I"] },
-            { name: "Zarosian training dummy", collections: ["Zarosian I", "Museum - Zarosian I", "Unlock Researcher: Katarina"] },
-            { name: "Hookah pipe", collections: ["Smoky Fings", "Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Opulent wine goblet", collections: ["Smoky Fings", "Zamorakian I", "Museum - Zamorakian I", "Unlock Researcher: Dorian"] },
-            { name: "Crest of Dagon", collections: ["Showy Fings", "Zamorakian I", "Museum - Zamorakian I", "Mystery: Eyes in their Stars"] },
-            { name: "'Disorder' painting", collections: ["Knowledge is Power", "Anarchic Abstraction", "Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Legatus Maximus figurine", collections: ["Showy Fings", "Zarosian I", "Museum - Zarosian I", "Magic Man"] },
-            { name: "'Solem in Umbra' painting", collections: ["Imperial Impressionism", "Zarosian I", "Museum - Zarosian I"] },
-            { name: "Imp mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Problem"] },
-            { name: "Lesser demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
-            { name: "Greater demon mask", collections: ["Zamorakian I", "Museum - Zamorakian I", "Hat Hoarder"] },
-            { name: "Teleportation crystal", collections: ["Quest: Osseous Rex"] },
-            { name: "Order of Dis robes", collections: ["Zamorakian I", "Museum - Zamorakian I"] },
-            { name: "Ritual dagger", collections: ["Zamorakian I", "Museum - Zamorakian I", "Magic Man"] },
-            { name: "'Frying pan'", collections: ["Saradominist I", "Museum - Saradominist I", "Mystery: Fallen Angels"] },
-            { name: "Hallowed lantern", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Branding iron", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Manacles", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Ancient timepiece", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Mystery: Time Served"] },
-            { name: "Legatus pendant", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Toolbelt: Kharid-et access"] },
-            { name: "Ceremonial unicorn ornament", collections: ["Saradominist I", "Museum - Saradominist I", "Hat Hoarder", "Unlock Researcher: Eduardo"] },
-            { name: "Ceremonial unicorn saddle", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Dragonkin device", collections: ["Quest: Desperate Measures"] },
-            { name: "Dragonkin tablet", collections: ["Quest: Desperate Measures"] },
-            { name: "Tetracompass (unpowered)", collections: ["Utility: Find ancient casket"] },
-            { name: "Everlight harp", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Everlight trumpet", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Everlight violin", collections: ["Saradominist I", "Museum - Saradominist I", "Wise Am the Music Man"] },
-            { name: "Folded-arm figurine (female)", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "Folded-arm figurine (male)", collections: ["Saradominist I", "Museum - Saradominist I"] },
-            { name: "'Incite Fear' spell scroll", collections: ["Zarosian II", "Museum - Zarosian II", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Pontifex signet ring", collections: ["Blingy Fings", "Zarosian II", "Museum - Zarosian II", "Toolbelt: Kharid-et access"] },
-            { name: "Apex cap", collections: ["Museum - Zarosian V", "Religious Iconography"] },
-            { name: "Curse tablet", collections: ["Museum - Zarosian V", "Imperial Sorcery"] },
-            { name: "Funerary urn of shadow", collections: ["Museum - Zarosian V", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Dominion discus", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion javelin", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion pelte shield", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Infula robes", collections: ["Museum - Zarosian V", "Religious Iconography"] },
-            { name: "Funerary urn of smoke", collections: ["Museum - Zarosian V", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Hand of the Ancients", collections: ["Museum - Zarosian V", "Imperial Sorcery"] },
-            { name: "Decorative amphora", collections: ["Museum - Zarosian VI", "Entertaining the Masses"] },
-            { name: "Funerary urn of ice", collections: ["Museum - Zarosian VI", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Loarnab rod", collections: ["Museum - Zarosian VI", "Religious Iconography"] },
-            { name: "Inquisitor's ceremonial armour", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "Inquisitor's ceremonial mask", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "Inquisitor's seal", collections: ["Finery of the Inquisition", "Museum - Zarosian VI"] },
-            { name: "'The Lake of Fire' painting", collections: ["Anarchic Abstraction", "Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "'Lust' metal sculpture", collections: ["Showy Fings", "Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Gladiator helmet", collections: ["Entertaining the Masses", "Museum - Zarosian VII"] },
-            { name: "Gladiator sword", collections: ["Entertaining the Masses", "Museum - Zarosian VII"] },
-            { name: "Funerary urn of blood", collections: ["Museum - Zarosian VII", "Urns of the Empire", "Mystery: Secrets of the Inquisition"] },
-            { name: "Funerary urn of miasma", collections: ["Museum - Zarosian VII", "Urns of the Empire"] },
-            { name: "Model chariot", collections: ["Museum - Zarosian VII", "Entertaining the Masses"] },
-            { name: "'The Serpent's Fall' carving", collections: ["Museum - Zarosian VII", "Religious Iconography"] },
-            { name: "Chaos star", collections: ["Zamorakian II", "Museum - Zamorakian II", "Toolbelt: Hydra portal"] },
-            { name: "Spiked dog collar", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Bronze Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
-            { name: "Silver Dominion medal", collections: ["Blingy Fings", "Saradominist II", "Museum - Saradominist II"] },
-            { name: "Dominion torch", collections: ["Smoky Fings", "Saradominist II", "Museum - Saradominist II", "Mystery: Hallowed Be..."] },
-            { name: "Ikovian gerege", collections: ["Armadylean I", "Museum - Armadylean I", "Knowledge is Power", "Toolbelt: Stormguard access"] },
-            { name: "Toy glider", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Toy war golem", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ceremonial dragonkin device", collections: ["Desperate for Artefacts"] },
-            { name: "Decorative vase", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Kantharos cup", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Patera bowl", collections: ["Saradominist II", "Museum - Saradominist II"] },
-            { name: "Castle gatestone", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Engraved ring of kinship", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Ceremonial mace", collections: ["Hitty Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex Maximus figurine", collections: ["Showy Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "'Consensus ad Idem' painting", collections: ["Imperial Impressionism", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Wingsuit v1", collections: ["Toolbelt: Stormguard traversal"] },
-            { name: "Avian song-egg player", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Keshik drum", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Morin khuur", collections: ["Armadylean I", "Museum - Armadylean I", "Wise Am the Music Man"] },
-            { name: "Ekeleshuun blinder mask", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I", "Hat Problem"] },
-            { name: "Narogoshuun 'Hob-da-Gob' ball", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Rekeshuun war tether", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Exploratory totem", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Excavator portal mine", collections: ["Dragonkin V", "Museum - Dragonkin V"] },
-            { name: "Storage totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Plant seed satchel", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Snuff box", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Aviansie dreamcoat", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ceremonial plume", collections: ["Showy Fings", "Armadylean I", "Museum - Armadylean I"] },
-            { name: "Peacocking parasol", collections: ["Armadylean I", "Museum - Armadylean I"] },
-            { name: "Ogre Kyzaj axe", collections: ["Red Rum Relics I", "Museum - Bandosian I"] },
-            { name: "Ork cleaver sword", collections: ["Red Rum Relics I", "Museum - Bandosian I"] },
-            { name: "Larupia trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Lion trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "She-wolf trophy", collections: ["Zamorakian II", "Museum - Zamorakian II"] },
-            { name: "Pontifex censer", collections: ["Smoky Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex crozier", collections: ["Hitty Fings", "Zarosian II", "Museum - Zarosian II"] },
-            { name: "Pontifex mitre", collections: ["Zarosian II", "Museum - Zarosian II", "Hat Hoarder"] },
-            { name: "Thorobshuun battle standard", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Yurkolgokh stink grenade", collections: ["Green Gobbo Goodies I", "Museum - Bandosian I"] },
-            { name: "Dominarian device", collections: ["Saradominist III", "Museum - Saradominist III", "Relic: Andvaranaut"] },
-            { name: "Fishing trident", collections: ["Hitty Fings", "Saradominist III", "Museum - Saradominist III"] },
-            { name: "Hawkeye lens multi-vision scope", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Talon-3 razor wing", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "'Exsanguinate' spell scroll", collections: ["Zarosian III", "Museum - Zarosian III", "Magic Man", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Necromantic focus", collections: ["Zarosian III", "Museum - Zarosian III", "Knowledge is Power", "Imperial Sorcery"] },
-            { name: "Spent summoning charm", collections: ["Dragonkin VI", "Museum - Dragonkin VI", "Toolbelt: Daemonheim access"] },
-            { name: "'Friendship bracelet'", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "Homely totem", collections: ["Dragonkin VI", "Museum - Dragonkin VI"] },
-            { name: "High priest crozier", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
-            { name: "High priest mitre", collections: ["Green Gobbo Goodies II", "Museum - Bandosian I", "Hat Problem", "Magic Man"] },
-            { name: "High priest orb", collections: ["Hitty Fings", "Green Gobbo Goodies II", "Museum - Bandosian I"] },
-            { name: "'Torment' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "'Pandemonium' tapestry", collections: ["Anarchic Abstraction", "Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Ceremonial dragonkin tablet", collections: ["Desperate for Artefacts"] },
-            { name: "Pasaha", collections: ["Dragonkin I", "Museum - Dragonkin I", "Crafting: Artificer's measure"] },
-            { name: "Ritual bell", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Prototype gravimeter", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Songbird recorder", collections: ["Armadylean II", "Museum - Armadylean II", "Wise Am the Music Man"] },
-            { name: "Amphora", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "Rod of Asclepius", collections: ["Showy Fings", "Saradominist III", "Museum - Saradominist III"] },
-            { name: "Zarosian ewer", collections: ["Zarosian III", "Museum - Zarosian III"] },
-            { name: "Zarosian stein", collections: ["Zarosian III", "Museum - Zarosian III"] },
-            { name: "Beastkeeper helm", collections: ["Red Rum Relics I", "Museum - Bandosian II", "Hat Problem"] },
-            { name: "Idithuun horn ring", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
-            { name: "'Nosorog!' sculpture", collections: ["Red Rum Relics I", "Museum - Bandosian II"] },
-            { name: "Dayguard shield", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Stormguard gerege", collections: ["Armadylean II", "Museum - Armadylean II", "Toolbelt: Howl's Workshop access"] },
-            { name: "Kilaya", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Vazara", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Ourg megahitter", collections: ["Red Rum Relics II", "Museum - Bandosian II", "Unlock Researcher: Asgarnia Smith"] },
-            { name: "Ourg tower/goblin cower shield", collections: ["Red Rum Relics II", "Museum - Bandosian II"] },
-            { name: "Garagorshuun anchor", collections: ["Green Gobbo Goodies II", "Museum - Bandosian II"] },
-            { name: "Golem heart", collections: ["Armadylean II", "Museum - Armadylean II"] },
-            { name: "Golem instruction", collections: ["Armadylean II", "Museum - Armadylean II", "Knowledge is Power", "Unlock Researcher: Elissa Giovanni"] },
-            { name: "Hellfire haladie", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Hellfire katar", collections: ["Zamorakian III", "Museum - Zamorakian III", "Relic: The Rings of Razulei"] },
-            { name: "Hellfire zaghnal", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Death mask", collections: ["Dragonkin I", "Museum - Dragonkin I", "Relic: Evil Bob's Catspaw"] },
-            { name: "Dragonkin calendar", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Dragonkin staff", collections: ["Dragonkin I", "Museum - Dragonkin I"] },
-            { name: "Dorgeshuun spear", collections: ["Green Gobbo Goodies III", "Museum - Bandosian II", "Mystery: You Have Chosen..."] },
-            { name: "'Forged in War' sculpture", collections: ["Red Rum Relics II", "Museum - Bandosian II", "Mystery: You Have Chosen..."] },
-            { name: "Kopis dagger", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "Xiphos short sword", collections: ["Saradominist III", "Museum - Saradominist III"] },
-            { name: "'Smoke Cloud' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Vigorem vial", collections: ["Zarosian III", "Museum - Zarosian III", "Crafting: Artificer's measure"] },
-            { name: "Dragon scalpel", collections: ["Dragonkin II", "Museum - Dragonkin II"] },
-            { name: "Protective goggles", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Artificer's measure"] },
-            { name: "Dragon burner", collections: ["Dragonkin II", "Museum - Dragonkin II", "Crafting: Orthen furnace core"] },
-            { name: "Orthenglass flask", collections: ["Dragonkin II", "Museum - Dragonkin II", "Relic: Soma"] },
-            { name: "Blackfire lance", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Nightguard shield", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Projection attuner", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Golden projection 'needle'", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Huzamogaarb chaos crown", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Hat Problem"] },
-            { name: "Saragorgak star crown", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Hat Hoarder"] },
-            { name: "'Possession' metal sculpture", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Trishula", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "Tsutsaroth piercing", collections: ["Zamorakian III", "Museum - Zamorakian III"] },
-            { name: "'Hallowed Be the Everlight' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "'The Lord of Light' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "'The Pride of Padosan' painting", collections: ["Museum - Saradominist IV", "Radiant Renaissance", "Saradominist IV"] },
-            { name: "Meditation pipe", collections: ["Dragonkin III", "Museum - Dragonkin III"] },
-            { name: "Personal totem", collections: ["Dragonkin III", "Museum - Dragonkin III"] },
-            { name: "Singing bowl", collections: ["Dragonkin III", "Museum - Dragonkin III", "Mystery: Fragmented Memories"] },
-            { name: "Ancient magic tablet", collections: ["Zarosian III", "Museum - Zarosian III", "Imperial Sorcery"] },
-            { name: "'Animate Dead' spell scroll", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Imperial Sorcery", "Mystery: The Vault of Shadows"] },
-            { name: "Portable phylactery", collections: ["Magic Man", "Zarosian III", "Museum - Zarosian III", "Mystery: The Forgotten Prisoner"] },
-            { name: "Comfort gatestone", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Halak's cube", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Lingam stone", collections: ["Dragonkin III", "Museum - Dragonkin III", "Toolbelt: Xolo City access"] },
-            { name: "Master control", collections: ["Dragonkin III", "Museum - Dragonkin III", "Mystery: Fragmented Memories"] },
-            { name: "'The Enlightened Soul' scroll", collections: ["Knowledge is Power", "Museum - Saradominist IV", "Saradominist IV"] },
-            { name: "'The Eudoxian Elements' tablet", collections: ["Knowledge is Power", "Museum - Saradominist IV", "Saradominist IV"] },
-            { name: "Drogokishuun hook sword", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III"] },
-            { name: "Hobgoblin mansticker", collections: ["Red Rum Relics II", "Museum - Bandosian III"] },
-            { name: "Chaos Elemental trophy", collections: ["Museum - Zamorakian IV", "Zamorakian IV"] },
-            { name: "Virius trophy", collections: ["Museum - Zamorakian IV", "Zamorakian IV"] },
-            { name: "Flat cap", collections: ["Armadylean III", "Museum - Armadylean III", "Hat Problem"] },
-            { name: "Night owl flight goggles", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godbow", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godstaff", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Prototype godsword", collections: ["Armadylean III", "Museum - Armadylean III", "Relic: The Subtle Blade"] },
-            { name: "Xolo hard hat", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Xolo pickaxe", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Portable portal generator", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Warped trinket", collections: ["Dragonkin VII", "Museum - Dragonkin VII"] },
-            { name: "Praetorian hood", collections: ["Zarosian IV", "Museum - Zarosian IV", "Hat Problem"] },
-            { name: "Praetorian robes", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Praetorian staff", collections: ["Zarosian IV", "Museum - Zarosian IV", "Crafting: Inquisitor staff"] },
-            { name: "Kal-i-kra chieftain crown", collections: ["Red Rum Relics III", "Museum - Bandosian III", "Hat Hoarder"] },
-            { name: "Kal-i-kra mace", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
-            { name: "Kal-i-kra warhorn", collections: ["Red Rum Relics III", "Museum - Bandosian III"] },
-            { name: "Spear of Annihilation", collections: ["Weapon"] },
-            { name: "Tsutsaroth helm", collections: ["Zamorakian IV", "Museum - Zamorakian IV", "Hat Hoarder"] },
-            { name: "Tsutsaroth pauldron", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
-            { name: "Tsutsaroth urumi", collections: ["Zamorakian IV", "Museum - Zamorakian IV"] },
-            { name: "Doru spear", collections: ["Saradominist IV", "Museum - Saradominist IV"] },
-            { name: "Kontos lance", collections: ["Saradominist IV", "Museum - Saradominist IV"] },
-            { name: "Chuluu stone", collections: ["Armadylean III", "Museum - Armadylean III", "Magic Man", "Relic: Experimental Aether Reactor"] },
-            { name: "Quintessence counter", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Spherical astrolabe", collections: ["Armadylean III", "Museum - Armadylean III"] },
-            { name: "Ancient globe", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "Battle plans", collections: ["Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "'Prima Legio' painting", collections: ["Imperial Impressionism", "Zarosian IV", "Museum - Zarosian IV"] },
-            { name: "'Da Boss Man' sculpture", collections: ["Green Gobbo Goodies III", "Museum - Bandosian III", "Knowledge is Power"] },
-            { name: "Horogothgar cooking pot", collections: ["Red Rum Relics III", "Green Gobbo Goodies III", "Museum - Bandosian III"] },
-            { name: "Xolo shield", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Xolo spear", collections: ["Dragonkin IV", "Museum - Dragonkin IV"] },
-            { name: "Gold dish", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] },
-            { name: "'Raksha' idol", collections: ["Dragonkin IV", "Museum - Dragonkin IV", "Mystery: Mysterious City"] }
-        ];
-    </script>
-    
+
     <script type="module">
         // --- DATA STRUCTURES ---
         const materialCosts = {
@@ -587,19 +655,19 @@
             "'Raksha' idol": { "Orgone": 56, "Dragon metal": 44, "Goldrune": 40 },
         };
         const materialFactions = {
-            'Imperial iron': 'Zarosian', 'Purpleheart wood': 'Zarosian', 'Third Age iron': 'Agnostic', 
-            'Zarosian insignia': 'Zarosian', 'Samite silk': 'Agnostic', 'Imperial steel': 'Zarosian', 
-            'White oak': 'Agnostic', 'Goldrune': 'Agnostic', 'Orthenglass': 'Agnostic', 'Vellum': 'Agnostic', 
-            'Cadmium red': 'Zamorakian', 'Ancient vis': 'Zarosian', 'Tyrian purple': 'Zarosian', 
-            'Leather scraps': 'Agnostic', 'Chaotic brimstone': 'Zamorakian', 'Demonhide': 'Zamorakian', 
-            'Eye of Dagon': 'Zamorakian', 'Hellfire metal': 'Zamorakian', 'Keramos': 'Saradominist', 
-            'White marble': 'Saradominist', 'Cobalt blue': 'Saradominist', 'Everlight silvthril': 'Saradominist', 
-            'Star of Saradomin': 'Saradominist', 'Blood of Orcus': 'Zarosian', 'Soapstone': 'Agnostic', 
-            'Stormguard steel': 'Armadylean', 'Wings of War': 'Armadylean', 'Dragon metal': 'Dragonkin', 
-            'Orgone': 'Dragonkin', 'Animal furs': 'Agnostic', 'Armadylean yellow': 'Armadylean', 
-            'Malachite green': 'Bandosian', 'Mark of the Kyzaj': 'Bandosian', 'Vulcanised rubber': 'Bandosian', 
-            'Warforged bronze': 'Bandosian', 'Compass rose': 'Dragonkin', 'Carbon black': 'Dragonkin', 
-            'Felt': 'Dragonkin', 'Fossilised bone': 'Agnostic', 'Yu\'biusk clay': 'Bandosian', 
+            'Imperial iron': 'Zarosian', 'Purpleheart wood': 'Zarosian', 'Third Age iron': 'Agnostic',
+            'Zarosian insignia': 'Zarosian', 'Samite silk': 'Agnostic', 'Imperial steel': 'Zarosian',
+            'White oak': 'Agnostic', 'Goldrune': 'Agnostic', 'Orthenglass': 'Agnostic', 'Vellum': 'Agnostic',
+            'Cadmium red': 'Zamorakian', 'Ancient vis': 'Zarosian', 'Tyrian purple': 'Zarosian',
+            'Leather scraps': 'Agnostic', 'Chaotic brimstone': 'Zamorakian', 'Demonhide': 'Zamorakian',
+            'Eye of Dagon': 'Zamorakian', 'Hellfire metal': 'Zamorakian', 'Keramos': 'Saradominist',
+            'White marble': 'Saradominist', 'Cobalt blue': 'Saradominist', 'Everlight silvthril': 'Saradominist',
+            'Star of Saradomin': 'Saradominist', 'Blood of Orcus': 'Zarosian', 'Soapstone': 'Agnostic',
+            'Stormguard steel': 'Armadylean', 'Wings of War': 'Armadylean', 'Dragon metal': 'Dragonkin',
+            'Orgone': 'Dragonkin', 'Animal furs': 'Agnostic', 'Armadylean yellow': 'Armadylean',
+            'Malachite green': 'Bandosian', 'Mark of the Kyzaj': 'Bandosian', 'Vulcanised rubber': 'Bandosian',
+            'Warforged bronze': 'Bandosian', 'Compass rose': 'Dragonkin', 'Carbon black': 'Dragonkin',
+            'Felt': 'Dragonkin', 'Fossilised bone': 'Agnostic', 'Yu\'biusk clay': 'Bandosian',
             'Aetherium alloy': 'Armadylean', 'Quintessence': 'Armadylean',
             // Corrected and updated Misc category
             'Ruby': 'Misc', 'White candle': 'Misc', 'Dragonstone': 'Misc', 'Bronze bar': 'Misc', 'Silver bar': 'Misc',
@@ -607,12 +675,234 @@
             'Rope': 'Misc', 'Black mushroom ink': 'Misc', 'Emerald': 'Misc', 'Molten glass': 'Misc', 'Death rune': 'Misc'
         };
 
-        
-        // Import the functions you need from the SDKs you need
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, writeBatch, getDocs, query, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        
-        // --- PASTE YOUR FIREBASE CONFIGURATION HERE ---
+        import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        function renderCollectionsSidebar() {
+            const sidebar = document.getElementById('collection-sidebar-list');
+            sidebar.innerHTML = '';
+
+            // 1. Get all unique collections
+            let allCollections = [...new Set(artefacts.flatMap(a => a.collections))];
+
+            // 2. Sort them based on the 'collectionSortOrder' array
+            allCollections.sort((a, b) => {
+                const indexA = collectionSortOrder.indexOf(a);
+                const indexB = collectionSortOrder.indexOf(b);
+
+                // If both are missing from the list, sort alphabetically at the bottom
+                if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+
+                // If A is missing, put it at the bottom
+                if (indexA === -1) return 1;
+
+                // If B is missing, put it at the bottom
+                if (indexB === -1) return -1;
+
+                // Otherwise, sort by the order in our list
+                return indexA - indexB;
+            });
+
+            // 3. Render buttons
+            allCollections.forEach(colName => {
+                // Optional: Skip "Seasonal" if present in data but wanted hidden
+                if (colName === 'Seasonal' || colName === 'Eep') return;
+
+                const btn = document.createElement('button');
+                btn.className = `text-left px-4 py-3 border-b transition text-sm font-medium ${colName === currentSelectedCollection ? 'active-collection' : ''}`;
+
+                // Calculate progress for this specific collection
+                const collectionItems = artefacts.filter(a => a.collections.includes(colName));
+                // Check how many of these items have *any* requests (globally or specifically)
+                let itemsRequested = 0;
+                collectionItems.forEach(a => {
+                    if (getRequestCount(a) > 0) itemsRequested++;
+                });
+
+                // Add name + simple progress indicator
+                btn.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span>${colName}</span>
+                ${itemsRequested >= collectionItems.length && collectionItems.length > 0
+                        ? '<span class="text-green-400 text-xs">&#10003;</span>'
+                        : ''}
+            </div>
+        `;
+
+                btn.onclick = () => {
+                    currentSelectedCollection = colName;
+                    renderCollectionsSidebar();
+                    renderCollectionGrid(colName);
+                };
+                sidebar.appendChild(btn);
+            });
+
+            if (!allCollections.includes(currentSelectedCollection)) {
+                currentSelectedCollection = allCollections[0] || null;
+            }
+
+            if (currentSelectedCollection) {
+                renderCollectionGrid(currentSelectedCollection);
+            }
+        }
+
+        function renderCollectionGrid(collectionName) {
+            const grid = document.getElementById('collection-grid');
+            const title = document.getElementById('collection-view-title');
+            const progress = document.getElementById('collection-progress');
+
+            grid.innerHTML = '';
+            title.textContent = collectionName;
+
+            // Filter items belonging to this collection
+            const collectionItems = artefacts.filter(a => a.collections.includes(collectionName));
+            let itemsRequested = 0;
+
+            collectionItems.forEach(artefact => {
+                // Use helper to get specific counts
+                const myRequestCount = getRequestCount(artefact, activePlayer, collectionName);
+                if (myRequestCount > 0) itemsRequested++;
+
+                const isRequested = myRequestCount > 0;
+
+                const card = document.createElement('div');
+                // Base styling for the card
+                card.className = `collection-card relative rounded border-2 p-2 flex flex-col items-center justify-between h-36 transition group ${isRequested ? 'opacity-100' : 'opacity-80 hover:opacity-100'}`;
+
+                // 1. IMAGE
+                const img = document.createElement('img');
+                img.src = getIconUrl(artefact.name);
+                img.className = "w-12 h-12 object-contain mt-2 drop-shadow-md";
+                img.onerror = function () { this.style.display = 'none'; }; // Hide broken images
+
+                // 2. NAME
+                const nameLabel = document.createElement('span');
+                nameLabel.className = "text-[10px] text-center font-semibold leading-tight mt-2 mb-1 px-1";
+                nameLabel.style.color = 'var(--collection-text)';
+                nameLabel.textContent = artefact.name;
+
+                // 3. GREEN BADGE (If requested)
+                if (isRequested) {
+                    const badge = document.createElement('div');
+                    badge.className = "absolute top-1 right-1 bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow border border-green-400";
+                    badge.textContent = myRequestCount;
+                    card.appendChild(badge);
+                }
+
+                // 4. HOVER CONTROLS (+ / - Buttons)
+                // We only add these if a player is selected
+                if (activePlayer) {
+                    const controls = document.createElement('div');
+                    // Hidden by default, shown on group-hover
+                    controls.className = "absolute inset-0 bg-black/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded backdrop-blur-sm z-10";
+
+                    // Note: We pass the 'collectionName' to updateRequest so it tracks specifically for this collection
+                    controls.innerHTML = `
+                <button class="w-8 h-8 rounded bg-red-600 text-white font-bold hover:bg-red-500 shadow-lg" onclick="event.stopPropagation(); window.updateRequest('${artefact.id}', -1, '${collectionName}')">-</button>
+                <button class="w-8 h-8 rounded bg-green-600 text-white font-bold hover:bg-green-500 shadow-lg" onclick="event.stopPropagation(); window.updateRequest('${artefact.id}', 1, '${collectionName}')">+</button>
+            `;
+                    card.appendChild(controls);
+                }
+
+                card.appendChild(img);
+                card.appendChild(nameLabel);
+                grid.appendChild(card);
+            });
+
+            progress.textContent = `${itemsRequested} / ${collectionItems.length} Requested`;
+        }
+
+        // --- FULFILLMENT BOARD ---
+        function renderFulfillmentCenter() {
+            const grid = document.getElementById('fulfillment-grid');
+            const emptyState = document.getElementById('fulfillment-empty');
+            if (!grid || !emptyState) return;
+
+            grid.innerHTML = '';
+            const active = artefacts.filter(a => getRequestCount(a) > 0);
+            active.sort((a, b) => {
+                if (a.sortOrder !== undefined && b.sortOrder !== undefined && a.sortOrder !== b.sortOrder) {
+                    return a.sortOrder - b.sortOrder; // Keep level/order from master list
+                }
+                return a.name.localeCompare(b.name);
+            });
+
+            if (active.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            active.forEach(artefact => {
+                const playerTotals = {};
+                if (artefact.requestedBy) {
+                    Object.entries(artefact.requestedBy).forEach(([key, count]) => {
+                        const player = key.includes('__') ? key.split('__')[0] : key;
+                        playerTotals[player] = (playerTotals[player] || 0) + count;
+                    });
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white border border-amber-200 rounded-lg shadow-sm p-4 flex flex-col gap-3";
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <img src="${getIconUrl(artefact.name)}" class="w-10 h-10 object-contain" onerror="this.style.display='none'" loading="lazy">
+                            <div>
+                                <p class="text-xs text-amber-700 uppercase font-semibold">Needed</p>
+                                <h3 class="font-bold text-lg text-amber-900 leading-tight">${artefact.name}</h3>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded bg-amber-100 text-amber-800 font-bold border border-amber-200">${getRequestCount(artefact)}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        ${Object.entries(playerTotals).map(([player, count]) => `
+                            <button class="px-3 py-1.5 rounded border border-gray-300 bg-amber-50 hover:bg-green-50 hover:border-green-500 text-sm flex items-center gap-2 transition"
+                                data-player="${player}" data-artefact="${artefact.id}">
+                                <span class="font-semibold text-amber-900">${player}</span>
+                                <span class="text-xs px-1.5 py-0.5 rounded bg-white border border-gray-200">${count}</span>
+                                <span class="text-xs text-green-700 font-semibold">Fulfill -1</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+
+                const buttons = card.querySelectorAll('button[data-player]');
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const player = btn.getAttribute('data-player');
+                        btn.disabled = true;
+                        await fulfillOneRequest(artefact, player);
+                        btn.disabled = false;
+                    });
+                });
+
+                grid.appendChild(card);
+            });
+        }
+
+        async function fulfillOneRequest(artefact, targetPlayer) {
+            if (!artefact.requestedBy) return;
+            const keys = Object.keys(artefact.requestedBy).filter(k => k === targetPlayer || k.startsWith(`${targetPlayer}__`));
+            if (!keys.length) return;
+            const keyToUse = keys.sort()[0]; // Stable, predictable choice
+            const fieldPath = `requestedBy.${keyToUse}`;
+            const currentCount = artefact.requestedBy[keyToUse] || 0;
+            if (currentCount <= 0) return;
+
+            const artefactRef = doc(db, "artefacts", artefact.id);
+            try {
+                if (currentCount > 1) {
+                    await updateDoc(artefactRef, { [fieldPath]: currentCount - 1 });
+                } else {
+                    await updateDoc(artefactRef, { [fieldPath]: deleteField() });
+                }
+            } catch (err) {
+                console.error('Error fulfilling request', err);
+            }
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyB7XlmkRWHkTIwTQQYzhtLDp0NBy_rTeKE",
             authDomain: "tci-gim-artefact-requesting.firebaseapp.com",
@@ -621,13 +911,103 @@
             messagingSenderId: "1004367201833",
             appId: "1:1004367201833:web:39bb7f3762443da04c7e38"
         };
-        // --- END OF FIREBASE CONFIGURATION ---
+        const collectionSortOrder = [
+            // --- Art Critic Jacques ---
+            "Anarchic Abstraction",
+            "Radiant Renaissance",
+            "Imperial Impressionism",
+
+            // --- Chief Tess ---
+            "Blingy Fings",
+            "Smoky Fings",
+            "Hitty Fings",
+            "Showy Fings",
+
+            // --- Eblis ---
+            "Finery of the Inquisition",
+            "Religious Iconography",
+            "Urns of the Empire",
+            "Entertaining the Masses",
+            "Imperial Sorcery",
+
+            // --- General Bentnoze ---
+            "Red Rum Relics I",
+            "Red Rum Relics II",
+            "Red Rum Relics III",
+
+            // --- General Wartface ---
+            "Green Gobbo Goodies I",
+            "Green Gobbo Goodies II",
+            "Green Gobbo Goodies III",
+
+            // --- Giles ---
+            "Desperate for Artefacts",
+
+            // --- Isaura ---
+            "Zamorakian I",
+            "Zamorakian II",
+            "Zamorakian III",
+            "Zamorakian IV",
+
+            // --- Lowse ---
+            "Armadylean I",
+            "Armadylean II",
+            "Armadylean III",
+
+            // --- Sharrigan ---
+            "Dragonkin I",
+            "Dragonkin II",
+            "Dragonkin III",
+            "Dragonkin IV",
+            "Dragonkin V",
+            "Dragonkin VI",
+            "Dragonkin VII",
+
+            // --- Sir Atcha ---
+            "Saradominist I",
+            "Saradominist II",
+            "Saradominist III",
+            "Saradominist IV",
+
+            // --- Soran ---
+            "Zarosian I",
+            "Zarosian II",
+            "Zarosian III",
+            "Zarosian IV",
+
+            // --- Velucia (Museum Collections) ---
+            "Museum - Training Weapons (tutorial-only)",
+            "Museum - Armadylean I", "Museum - Armadylean II", "Museum - Armadylean III",
+            "Museum - Bandosian I", "Museum - Bandosian II", "Museum - Bandosian III",
+            "Museum - Dragonkin I", "Museum - Dragonkin II", "Museum - Dragonkin III", "Museum - Dragonkin IV", "Museum - Dragonkin V", "Museum - Dragonkin VI", "Museum - Dragonkin VII",
+            "Museum - Saradominist I", "Museum - Saradominist II", "Museum - Saradominist III", "Museum - Saradominist IV",
+            "Museum - Zamorakian I", "Museum - Zamorakian II", "Museum - Zamorakian III", "Museum - Zamorakian IV",
+            "Museum - Zarosian I", "Museum - Zarosian II", "Museum - Zarosian III", "Museum - Zarosian IV", "Museum - Zarosian V", "Museum - Zarosian VI", "Museum - Zarosian VII",
+
+            // --- Wise Old Man ---
+            "Wise Am the Music Man",
+            "Hat Problem",
+            "Hat Hoarder",
+            "Magic Man",
+            "Knowledge is Power"
+        ];
 
         // --- GLOBAL VARIABLES ---
         const players = ['Reebs', 'Jahar', 'Maelstrom', 'Thomas'];
         let artefacts = []; // This will be populated from Firebase
         let activePlayer = null; // The currently selected player for editing
         let unsubscribe = null; // To store the real-time listener
+        let currentSelectedCollection = 'Anarchic Abstraction'; // Default
+        const THEME_KEY = 'tci-theme';
+
+        function applyTheme(theme) {
+            const allowed = ['parchment', 'daemonheim', 'everlight', 'warforge', 'orthen', 'stormguard', 'infernal', 'kharid-et'];
+            const normalized = allowed.includes(theme) ? theme : 'parchment';
+            document.documentElement.setAttribute('data-theme', normalized === 'parchment' ? '' : normalized);
+            const selector = document.getElementById('theme-select');
+            if (selector) selector.value = normalized;
+            localStorage.setItem(THEME_KEY, normalized);
+        }
 
         // --- INITIALIZATION ---
         const app = initializeApp(firebaseConfig);
@@ -635,116 +1015,58 @@
         const artefactsCollection = collection(db, "artefacts");
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderPlayerControls();
-            setupRealtimeListener();
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'parchment';
+            applyTheme(savedTheme);
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
+            }
 
-            document.getElementById('collection-filter').addEventListener('change', applyFilters);
-            document.getElementById('artefact-search').addEventListener('input', applyFilters);
-            document.getElementById('sync-button').addEventListener('click', syncDatabaseWithMasterList);
+            renderPlayerControls();
+            bindFilters();
+            setupRealtimeListener();
         });
 
-        // --- DATABASE SYNC LOGIC ---
-        async function syncDatabaseWithMasterList() {
-            const syncButton = document.getElementById('sync-button');
-            const syncStatus = document.getElementById('sync-status');
+        function bindFilters() {
+            const searchInput = document.getElementById('artefact-search');
+            const collectionFilter = document.getElementById('collection-filter');
 
-            syncButton.disabled = true;
-            syncButton.textContent = 'Syncing...';
-            syncStatus.textContent = 'Fetching current data from database...';
+            if (searchInput) {
+                searchInput.addEventListener('input', () => applyFilters());
+            }
 
-            try {
-                // 1. Get the master list from the HTML. Add a sortOrder property.
-                const localMasterList = masterArtefactList.map((artefact, index) => ({
-                    ...artefact,
-                    sortOrder: index
-                }));
-                const localMasterMap = new Map(localMasterList.map(a => [a.name, a]));
-
-                // 2. Get all existing documents from Firestore.
-                const querySnapshot = await getDocs(query(artefactsCollection));
-                const dbArtefacts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const dbArtefactsMap = new Map(dbArtefacts.map(a => [a.name, a]));
-
-                syncStatus.textContent = 'Comparing lists and preparing updates...';
-
-                const batch = writeBatch(db);
-                let added = 0, updated = 0, removed = 0;
-
-                // 3. Iterate through the local master list to find items to add or update.
-                for (const [name, localArtefact] of localMasterMap.entries()) {
-                    const dbArtefact = dbArtefactsMap.get(name);
-                    if (dbArtefact) {
-                        // Artefact exists in DB. Check if an update is needed.
-                        if (dbArtefact.sortOrder !== localArtefact.sortOrder || JSON.stringify(dbArtefact.collections) !== JSON.stringify(localArtefact.collections)) {
-                            const docRef = doc(db, "artefacts", dbArtefact.id);
-                            batch.update(docRef, {
-                                collections: localArtefact.collections,
-                                sortOrder: localArtefact.sortOrder
-                            });
-                            updated++;
-                        }
-                    } else {
-                        // Artefact does not exist in DB. Add it.
-                        const newDocRef = doc(artefactsCollection);
-                        batch.set(newDocRef, { ...localArtefact, requestedBy: {} });
-                        added++;
-                    }
-                }
-
-                // 4. Iterate through the database list to find items to delete.
-                for (const [name, dbArtefact] of dbArtefactsMap.entries()) {
-                    if (!localMasterMap.has(name)) {
-                        // Artefact in DB is not in the local master list. Delete it.
-                        const docRef = doc(db, "artefacts", dbArtefact.id);
-                        batch.delete(docRef);
-                        removed++;
-                    }
-                }
-
-                // 5. Commit the batch write.
-                if (added > 0 || updated > 0 || removed > 0) {
-                    syncStatus.textContent = `Applying changes: ${added} added, ${updated} updated, ${removed} removed.`;
-                    await batch.commit();
-                    syncStatus.textContent = `Sync complete! ${added} added, ${updated} updated, ${removed} removed.`;
-                } else {
-                    syncStatus.textContent = 'Database is already up to date. No changes needed.';
-                }
-
-            } catch (error) {
-                console.error("Error syncing database:", error);
-                syncStatus.textContent = 'An error occurred during sync. Check the console.';
-                syncStatus.classList.add('text-red-500');
-            } finally {
-                setTimeout(() => {
-                    syncStatus.textContent = '';
-                    syncStatus.classList.remove('text-red-500');
-                    syncButton.disabled = false;
-                    syncButton.textContent = 'Sync Master List';
-                }, 5000);
+            if (collectionFilter) {
+                collectionFilter.addEventListener('change', () => applyFilters());
             }
         }
-
 
         // --- FIREBASE REAL-TIME LISTENER ---
         function setupRealtimeListener() {
             if (unsubscribe) unsubscribe();
 
             unsubscribe = onSnapshot(artefactsCollection, (snapshot) => {
-                if (snapshot.empty) {
-                     document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="5" class="text-center py-4">Database is empty. Please use the "Sync Master List" button to populate it.</td></tr>`;
-                     return;
-                }
                 artefacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 artefacts.sort((a, b) => a.sortOrder - b.sortOrder);
-                
-                populateFilters();
-                applyFilters();
-                // Call material calculators whenever the data changes
+
+                // 2. Always update the Math (Materials list is visible in both views)
                 calculateAndRenderTotalMaterials();
                 calculateAndRenderPerPersonMaterials();
+
+                // 3. Decide which view to update
+                const collectionsView = document.getElementById('collections-view-section');
+                const fulfillmentView = document.getElementById('fulfillment-view-section');
+
+                if (collectionsView && !collectionsView.classList.contains('hidden')) {
+                    if (currentSelectedCollection) renderCollectionGrid(currentSelectedCollection);
+                } else if (fulfillmentView && !fulfillmentView.classList.contains('hidden')) {
+                    renderFulfillmentCenter();
+                } else {
+                    populateFilters();
+                    applyFilters();
+                }
+
             }, (error) => {
                 console.error("Error listening to artefact collection:", error);
-                document.getElementById('artefact-table-body').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error connecting to the database. Please check the console and your Firebase setup.</td></tr>`;
             });
         }
 
@@ -752,57 +1074,48 @@
         function renderPlayerControls() {
             const container = document.getElementById('player-controls');
             container.innerHTML = '';
+
             players.forEach(player => {
                 const playerButton = document.createElement('button');
-                playerButton.className = 'p-2 rounded-lg border-2 border-amber-300 shadow-sm hover:bg-amber-200 transition';
+                playerButton.className = 'p-2 rounded-lg border-2 border-amber-300 shadow-sm hover:bg-amber-200 transition duration-200';
                 playerButton.textContent = player;
-                
+
                 playerButton.onclick = () => {
+                    // 1. Toggle the active player state
                     activePlayer = (activePlayer === player) ? null : player;
+
+                    // 2. Re-render these buttons (to highlight the selected one)
                     renderPlayerControls();
-                    applyFilters();
+
+                    // 3. INTELLIGENT REFRESH: Check which view is open!
+                    const collectionsView = document.getElementById('collections-view-section');
+                    const isCollectionsOpen = collectionsView && !collectionsView.classList.contains('hidden');
+
+                    if (isCollectionsOpen) {
+                        // If we are in Collections View, refresh the Grid immediately
+                        if (currentSelectedCollection) {
+                            renderCollectionGrid(currentSelectedCollection);
+                        }
+                    } else {
+                        // If we are in List View, refresh the Table
+                        applyFilters();
+                    }
+
+                    // 4. Always refresh the material calculations (since they show per-person data)
+                    calculateAndRenderTotalMaterials();
+                    calculateAndRenderPerPersonMaterials();
                 };
 
+                // Highlight the active button
                 if (player === activePlayer) {
-                    playerButton.classList.add('bg-amber-300', 'border-amber-500', 'font-bold');
-                    playerButton.classList.remove('border-amber-300');
+                    playerButton.classList.add('bg-amber-400', 'border-amber-600', 'font-bold', 'text-amber-900');
+                    playerButton.classList.remove('border-amber-300', 'bg-amber-50');
+                } else {
+                    playerButton.classList.add('bg-amber-50'); // Default background
                 }
 
                 container.appendChild(playerButton);
             });
-        }
-
-        async function updateRequest(artefactId, change) {
-            if (!activePlayer) {
-                const prompt = document.getElementById('request-prompt');
-                prompt.textContent = 'Please select your name above before making a request!';
-                prompt.classList.add('text-red-500', 'font-bold');
-                setTimeout(() => {
-                    prompt.textContent = 'Click your name below to start adding or removing requests in the table.';
-                    prompt.classList.remove('text-red-500', 'font-bold');
-                }, 2500);
-                return;
-            }
-
-            const artefactRef = doc(db, "artefacts", artefactId);
-            
-            try {
-                const docSnap = await getDoc(artefactRef);
-                if (docSnap.exists()) {
-                    const artefact = docSnap.data();
-                    const currentRequests = artefact.requestedBy || {};
-                    const currentCount = currentRequests[activePlayer] || 0;
-                    const newCount = Math.max(0, currentCount + change);
-                    const fieldPath = `requestedBy.${activePlayer}`;
-                    if (newCount > 0) {
-                        await updateDoc(artefactRef, { [fieldPath]: newCount });
-                    } else {
-                        await updateDoc(artefactRef, { [fieldPath]: deleteField() });
-                    }
-                }
-            } catch (error) {
-                console.error("Error updating request:", error);
-            }
         }
 
         // --- FILTERING AND RENDERING ---
@@ -833,58 +1146,104 @@
             });
             renderTable(filteredArtefacts);
         }
+        // --- HELPER FUNCTION FOR ICONS ---
+        function getIconUrl(name) {
+            const formattedName = name.trim()
+                .replace(/ /g, '_')   // Replace spaces with underscores
+                .replace(/\//g, '-'); // Replace forward slashes with hyphens (Specifically for the fucking Ourg tower shield)
+            return `https://runescape.wiki/images/${formattedName}_detail.png`;
+        }
+        function getMaterialIconUrl(name) {
+            const formattedName = name.trim()
+                .replace(/ /g, '_')
+                .replace(/\//g, '-');
+            return `https://runescape.wiki/images/${formattedName}_detail.png`;
+        }
 
+        // ... renderTable function goes here ...
         function renderTable(data) {
             const tableBody = document.getElementById('artefact-table-body');
             tableBody.innerHTML = '';
+
             if (data.length === 0 && artefacts.length > 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No artefacts found matching your criteria.</td></tr>`;
                 return;
             }
+
             data.forEach(artefact => {
                 const row = tableBody.insertRow();
-                row.className = 'bg-white border-b hover:bg-amber-100';
-                row.insertCell().textContent = artefact.name;
-                row.cells[0].className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap';
-                row.insertCell().textContent = artefact.collections.join(', ');
-                row.cells[1].className = 'px-6 py-4';
-                const totalRequests = artefact.requestedBy ? Object.values(artefact.requestedBy).reduce((s, c) => s + c, 0) : 0;
+                row.className = 'bg-white border-b hover:bg-amber-100 transition-colors duration-200';
+
+                // 1. NAME & ICON (Existing code)
+                const nameCell = row.insertCell();
+                nameCell.className = 'px-6 py-4 font-medium whitespace-nowrap flex items-center gap-3';
+                nameCell.style.color = 'var(--text-primary)';
+                nameCell.innerHTML = `
+            <img src="${getIconUrl(artefact.name)}" class="w-8 h-8 object-contain" onerror="this.style.display='none'" loading="lazy">
+            <span>${artefact.name}</span>
+        `;
+
+                // 2. TOTAL REQUESTS (Use Helper)
+                const totalRequests = getRequestCount(artefact);
                 row.insertCell().textContent = totalRequests;
-                row.cells[2].className = 'px-6 py-4 font-bold text-center';
-                const requestersString = artefact.requestedBy ? Object.entries(artefact.requestedBy).map(([n, c]) => `${n} (x${c})`).sort().join(', ') : 'None';
-                row.insertCell().textContent = requestersString;
-                row.cells[3].className = 'px-6 py-4';
+                row.cells[1].className = 'px-6 py-4 font-bold text-center';
+
+                // 3. REQUESTERS LIST (Cleaned Up!)
+                const requestersList = [];
+                if (artefact.requestedBy) {
+                    Object.entries(artefact.requestedBy).forEach(([key, count]) => {
+                        // Convert "Jahar__Museum" -> "Jahar (Museum)"
+                        let displayStr = "";
+                        if (key.includes('__')) {
+                            const parts = key.split('__');
+                            const pName = parts[0];
+                            const cName = parts[1];
+                            displayStr = `${pName} <span class="text-xs text-gray-500">(${cName})</span>: ${count}`;
+                        } else {
+                            displayStr = `${key}: ${count}`;
+                        }
+                        requestersList.push(displayStr);
+                    });
+                }
+
+                // We render HTML inside the cell now to support the span styling
+                const reqCell = row.insertCell();
+                reqCell.className = 'px-6 py-4';
+                reqCell.innerHTML = requestersList.length > 0 ? requestersList.join('<br>') : '<span class="text-gray-400">None</span>';
+
+                // 4. CONTROLS (Your Requests)
+                const myRequests = getRequestCount(artefact, activePlayer); // Helper sums all my collections
+
                 const cellControls = row.insertCell();
                 cellControls.className = 'px-6 py-4';
                 const controlDiv = document.createElement('div');
                 controlDiv.className = 'flex items-center justify-center gap-2';
-                const minusButton = document.createElement('button');
-                minusButton.className = 'px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400';
-                minusButton.textContent = '-';
-                minusButton.disabled = !activePlayer;
-                minusButton.onclick = () => updateRequest(artefact.id, -1);
-                const countSpan = document.createElement('span');
-                countSpan.className = 'font-bold w-6 text-center';
-                countSpan.textContent = (activePlayer && artefact.requestedBy && artefact.requestedBy[activePlayer]) ? artefact.requestedBy[activePlayer] : '0';
-                const plusButton = document.createElement('button');
-                plusButton.className = 'px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400';
-                plusButton.textContent = '+';
-                plusButton.disabled = !activePlayer;
-                plusButton.onclick = () => updateRequest(artefact.id, 1);
-                controlDiv.appendChild(minusButton);
-                controlDiv.appendChild(countSpan);
-                controlDiv.appendChild(plusButton);
+
+                // Note: We do NOT pass a collection name here. We pass null.
+                // This triggers the "Smart Logic" in updateRequest.
+                controlDiv.innerHTML = `
+            <button class="px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 transition" 
+                ${!activePlayer ? 'disabled' : ''} 
+                onclick="window.updateRequest('${artefact.id}', -1)">-</button>
+            
+            <span class="font-bold w-6 text-center">${myRequests}</span>
+            
+            <button class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 transition" 
+                ${!activePlayer ? 'disabled' : ''} 
+                onclick="window.updateRequest('${artefact.id}', 1)">+</button>
+        `;
                 cellControls.appendChild(controlDiv);
             });
         }
-        
+
+
         // --- MATERIAL CALCULATION ---
         function calculateAndRenderTotalMaterials() {
             const totalMaterials = {};
             artefacts.forEach(artefact => {
-                const requests = artefact.requestedBy;
-                if (!requests) return;
-                const totalCount = Object.values(requests).reduce((sum, count) => sum + count, 0);
+                // Helper with NO filters gets the sum of ALL requests (Global + All Collections)
+                const totalCount = getRequestCount(artefact);
+
                 if (totalCount === 0) return;
                 const materials = materialCosts[artefact.name];
                 if (materials) {
@@ -895,7 +1254,7 @@
             });
 
             const container = document.getElementById('material-list');
-            container.innerHTML = ''; 
+            container.innerHTML = '';
 
             if (Object.keys(totalMaterials).length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500">Request an artefact to see the required materials here.</p>';
@@ -923,13 +1282,14 @@
 
                 const factionGrid = document.createElement('div');
                 factionGrid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
-                
+
                 materialsByFaction[faction].sort((a, b) => a.name.localeCompare(b.name)).forEach(mat => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'bg-amber-50 p-3 rounded-lg text-center shadow-sm';
                     itemDiv.innerHTML = `
-                        <p class="font-bold text-amber-900 text-lg">${mat.count}</p>
-                        <p class="text-sm text-amber-700">${mat.name}</p>
+                        <img src="${getMaterialIconUrl(mat.name)}" class="w-10 h-10 mx-auto mb-2 object-contain" onerror="this.style.display='none'" loading="lazy">
+                        <p class="font-bold text-lg" style="color: var(--text-primary);">${mat.count}</p>
+                        <p class="text-sm" style="color: var(--text-subtle);">${mat.name}</p>
                     `;
                     factionGrid.appendChild(itemDiv);
                 });
@@ -945,7 +1305,7 @@
             players.forEach(player => {
                 const playerMaterials = {};
                 artefacts.forEach(artefact => {
-                    const count = artefact.requestedBy ? (artefact.requestedBy[player] || 0) : 0;
+                    const count = getRequestCount(artefact, player); // Includes collection-scoped requests
                     if (count > 0) {
                         hasAnyRequests = true;
                         const materials = materialCosts[artefact.name];
@@ -968,7 +1328,7 @@
                     const playerCard = document.createElement('div');
                     playerCard.className = 'bg-amber-50 p-4 rounded-lg shadow-md';
                     let cardHtml = `<h3 class="text-xl font-bold text-amber-900 mb-3 text-center border-b-2 border-amber-200 pb-2">${player}</h3>`;
-                    
+
                     const sortedFactions = Object.keys(materialsByFaction).sort((a, b) => {
                         if (a === 'Misc') return 1;
                         if (b === 'Misc') return -1;
@@ -976,9 +1336,9 @@
                     });
 
                     sortedFactions.forEach(faction => {
-                        cardHtml += `<h4 class="text-md font-semibold text-amber-800 mt-3 mb-1">${faction}</h4><ul class="list-disc list-inside text-sm text-gray-700">`;
-                        materialsByFaction[faction].sort((a,b) => a.name.localeCompare(b.name)).forEach(mat => {
-                           cardHtml += `<li><strong>${mat.count}</strong> ${mat.name}</li>`;
+                        cardHtml += `<h4 class="text-md font-semibold mt-3 mb-1" style="color: var(--text-primary);">${faction}</h4><ul class="list-disc list-inside text-sm" style="color: var(--text-subtle);">`;
+                        materialsByFaction[faction].sort((a, b) => a.name.localeCompare(b.name)).forEach(mat => {
+                            cardHtml += `<li class="flex items-center gap-2"><img src="${getMaterialIconUrl(mat.name)}" class="w-5 h-5 object-contain" onerror="this.style.display='none'" loading="lazy"><span><strong>${mat.count}</strong> ${mat.name}</span></li>`;
                         });
                         cardHtml += `</ul>`;
                     });
@@ -991,6 +1351,150 @@
                 container.innerHTML = '<p class="col-span-full text-center text-gray-500">No requests have been made by anyone yet.</p>';
             }
         }
+
+        // Helper to calculate totals from the new "Player__Collection" data structure
+        function getRequestCount(artefact, playerFilter = null, collectionFilter = null) {
+            if (!artefact.requestedBy) return 0;
+
+            return Object.entries(artefact.requestedBy).reduce((total, [key, count]) => {
+                const [pName, cName] = key.split('__'); // Split "Reebs__Armadylean I"
+
+                // 1. Filter by Player (if requested)
+                if (playerFilter && pName !== playerFilter) return total;
+
+                // 2. Filter by Collection (if requested)
+                // If collectionFilter is provided, we ONLY want matches for that collection.
+                // If collectionFilter is null (Table View), we want EVERYTHING (Global + Scoped).
+                if (collectionFilter && cName !== collectionFilter) return total;
+
+                return total + count;
+            }, 0);
+        }
+        window.switchView = function (viewName) {
+            const tableContainer = document.getElementById('table-view-container');
+            const colSection = document.getElementById('collections-view-section');
+            const fulfillSection = document.getElementById('fulfillment-view-section');
+            const btnTable = document.getElementById('view-table-btn');
+            const btnCol = document.getElementById('view-collection-btn');
+            const btnFulfill = document.getElementById('view-fulfillment-btn');
+
+            if (viewName === 'collection') {
+                tableContainer.classList.add('hidden'); // Hide the whole table container
+                colSection.classList.remove('hidden'); // Show grid
+                fulfillSection.classList.add('hidden');
+
+                // Toggle Button Styles
+                btnTable.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnTable.classList.add('text-amber-800', 'hover:bg-white/50');
+                btnCol.classList.add('bg-white', 'shadow-sm', 'text-amber-900');
+                btnCol.classList.remove('text-amber-800', 'hover:bg-white/50');
+                btnFulfill.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnFulfill.classList.add('text-amber-800', 'hover:bg-white/50');
+
+                renderCollectionsSidebar();
+            } else if (viewName === 'fulfillment') {
+                tableContainer.classList.add('hidden');
+                colSection.classList.add('hidden');
+                fulfillSection.classList.remove('hidden');
+
+                btnTable.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnTable.classList.add('text-amber-800', 'hover:bg-white/50');
+                btnCol.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnCol.classList.add('text-amber-800', 'hover:bg-white/50');
+                btnFulfill.classList.add('bg-white', 'shadow-sm', 'text-amber-900');
+                btnFulfill.classList.remove('text-amber-800', 'hover:bg-white/50');
+
+                renderFulfillmentCenter();
+            } else {
+                tableContainer.classList.remove('hidden'); // Show table container
+                colSection.classList.add('hidden'); // Hide grid
+                fulfillSection.classList.add('hidden');
+
+                // Toggle Button Styles
+                btnTable.classList.add('bg-white', 'shadow-sm', 'text-amber-900');
+                btnTable.classList.remove('text-amber-800', 'hover:bg-white/50');
+                btnCol.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnCol.classList.add('text-amber-800', 'hover:bg-white/50');
+                btnFulfill.classList.remove('bg-white', 'shadow-sm', 'text-amber-900');
+                btnFulfill.classList.add('text-amber-800', 'hover:bg-white/50');
+
+                populateFilters();
+                applyFilters();
+            }
+        };
+        async function updateRequest(artefactId, change, collectionName = null) {
+            if (!activePlayer) {
+                const prompt = document.getElementById('request-prompt');
+                // Simple visual shake or alert if no player selected
+                if (prompt) {
+                    prompt.classList.add('text-red-600', 'font-bold');
+                    setTimeout(() => prompt.classList.remove('text-red-600', 'font-bold'), 500);
+                }
+                return;
+            }
+
+            const artefactRef = doc(db, "artefacts", artefactId);
+
+            try {
+                const docSnap = await getDoc(artefactRef);
+                if (docSnap.exists()) {
+                    const artefact = docSnap.data();
+                    const currentRequests = artefact.requestedBy || {};
+
+                    let targetKey = null;
+
+                    // SCENARIO A: We are in Collections View (Specific Target)
+                    if (collectionName) {
+                        targetKey = `${activePlayer}__${collectionName}`;
+                    }
+                    // SCENARIO B: We are in List View (Smart Target)
+                    else {
+                        // 1. Find all keys belonging to the active player
+                        const playerKeys = Object.keys(currentRequests).filter(k => {
+                            // Matches "PlayerName" OR "PlayerName__Collection"
+                            return k === activePlayer || k.startsWith(`${activePlayer}__`);
+                        });
+
+                        if (change < 0) {
+                            // REMOVING: If we have requests, just pick the first one and reduce it.
+                            // This fulfills the "List shouldn't care" requirement.
+                            if (playerKeys.length > 0) {
+                                targetKey = playerKeys[0];
+                            } else {
+                                return; // Nothing to remove
+                            }
+                        } else {
+                            // ADDING: Default to "General" bucket if added from List View
+                            // Check if a "General" or plain key exists first to keep it tidy
+                            const generalKey = `${activePlayer}__General`;
+                            const plainKey = activePlayer;
+
+                            if (currentRequests[generalKey]) targetKey = generalKey;
+                            else if (currentRequests[plainKey]) targetKey = plainKey;
+                            else targetKey = generalKey; // Default new requests to General
+                        }
+                    }
+
+                    if (targetKey) {
+                        const currentCount = currentRequests[targetKey] || 0;
+                        const newCount = Math.max(0, currentCount + change);
+                        const fieldPath = `requestedBy.${targetKey}`;
+
+                        if (newCount > 0) {
+                            await updateDoc(artefactRef, { [fieldPath]: newCount });
+                        } else {
+                            await updateDoc(artefactRef, { [fieldPath]: deleteField() });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error updating request:", error);
+            }
+        }
+
+        // Ensure it is globally exposed
+        window.updateRequest = updateRequest;
     </script>
 </body>
+
 </html>
