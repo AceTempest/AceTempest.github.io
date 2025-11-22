@@ -395,12 +395,13 @@
                 </div>
             </div>
 
-            <div id="fulfillment-view-section"
-                class="hidden p-6 rounded-lg shadow-lg border-2 themed-panel" style="border-color: var(--panel-border);">
+            <div id="fulfillment-view-section" class="hidden p-6 rounded-lg shadow-lg border-2 themed-panel"
+                style="border-color: var(--panel-border);">
                 <header class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Fulfillment Center</h2>
-                        <p class="text-sm" style="color: var(--text-subtle);">See outstanding requests (sorted by level/order) and mark
+                        <p class="text-sm" style="color: var(--text-subtle);">See outstanding requests (sorted by
+                            level/order) and mark
                             them as fulfilled.</p>
                     </div>
                 </header>
@@ -720,14 +721,11 @@
                     if (getRequestCount(a) > 0) itemsRequested++;
                 });
 
-                // Add name + simple progress indicator
+                // Add name ONLY (Progress indicator removed)
                 btn.innerHTML = `
-            <div class="flex justify-between items-center">
-                <span>${colName}</span>
-                ${itemsRequested >= collectionItems.length && collectionItems.length > 0
-                        ? '<span class="text-green-400 text-xs">&#10003;</span>'
-                        : ''}
-            </div>
+    <div class="flex justify-between items-center">
+        <span>${colName}</span>
+    </div>
         `;
 
                 btn.onclick = () => {
